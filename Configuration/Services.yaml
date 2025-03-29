@@ -1,0 +1,10 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  Rfuehricht\Formhandler\:
+    resource: '../Classes/*'
+    autowire: true
+    public: true

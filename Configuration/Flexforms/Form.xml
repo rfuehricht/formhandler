@@ -1,0 +1,25 @@
+<T3DataStructure>
+    <sheets>
+        <sGeneral>
+            <ROOT>
+                <type>array</type>
+                <el>
+                    <settings.useForm>
+                        <label>Use predefined form</label>
+                        <config>
+                            <type>select</type>
+                            <renderType>selectSingle</renderType>
+                            <items>
+                                <numIndex index="0">
+                                    <label> </label>
+                                    <value> </value>
+                                </numIndex>
+                            </items>
+                            <itemsProcFunc>Rfuehricht\Formhandler\Utility\TcaUtility->getPredefinedForms</itemsProcFunc>
+                        </config>
+                    </settings.useForm>
+                </el>
+            </ROOT>
+        </sGeneral>
+    </sheets>
+</T3DataStructure>
