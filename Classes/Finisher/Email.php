@@ -14,7 +14,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * Finisher to send emails after successful form submission.
  *
  *
-
  */
 class Email extends AbstractFinisher
 {
