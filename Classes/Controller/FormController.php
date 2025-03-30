@@ -93,6 +93,17 @@ class FormController extends ActionController
                         $this->processFiles();
                     }
                 } elseif ($wantedStep === $currentStep || $wantedStep === $currentStep - 1) {
+
+                    //Submit reload action for uploading files
+                    /*if ($wantedStep === $currentStep) {
+                        //Run validations
+                        $errors = $this->runFileValidations();
+
+                        if (empty($errors)) {
+                            $this->processFiles();
+                        }
+                    }*/
+
                     $currentStep = $wantedStep;
                     if ($currentStep < 1) {
                         $currentStep = 1;
@@ -298,108 +309,100 @@ class FormController extends ActionController
         $sessionFiles = $this->globals->getSession()->get('files');
         $tempFiles = $sessionFiles;
 
-        if (is_array($_FILES) && !empty($_FILES)) {
+        $files = $this->formUtility->getFilesArray();
+
+        if (!empty($files)) {
             $uploadedFilesWithSameNameAction = $this->settings['files']['uploadedFilesWithSameName'] ?? 'ignore';
 
-            //for all file properties
-            foreach ($_FILES as $files) {
-                //if a file was uploaded
-                if (isset($files['name']) && is_array($files['name'])) {
-                    if ($this->globals->getFormValuesPrefix()) {
-                        foreach ($files as &$options) {
-                            if (isset($options[$this->globals->getFormValuesPrefix()])) {
-                                $options = $options[$this->globals->getFormValuesPrefix()];
-                            }
-                        }
+            //if a file was uploaded
+            if (isset($files['name']) && is_array($files['name'])) {
+
+                //for all file names
+                foreach ($files['name'] as $field => $uploadedFiles) {
+
+
+                    //If only a single file is uploaded
+                    if (!is_array($uploadedFiles)) {
+                        $uploadedFiles = [$uploadedFiles];
                     }
 
-                    //for all file names
-                    foreach ($files['name'] as $field => $uploadedFiles) {
 
+                    $uploadPath = $this->formUtility->getUploadFolder($field);
 
-                        //If only a single file is uploaded
-                        if (!is_array($uploadedFiles)) {
-                            $uploadedFiles = [$uploadedFiles];
-                        }
-
-
-                        $uploadPath = $this->formUtility->getUploadFolder($field);
-
-                        foreach ($uploadedFiles as $idx => $name) {
-                            $exists = false;
-                            if (is_array($sessionFiles[$field])) {
-                                foreach ($sessionFiles[$field] as $fileOptions) {
-                                    if ($fileOptions['name'] === $name) {
-                                        $exists = true;
-                                    }
+                    foreach ($uploadedFiles as $idx => $name) {
+                        $exists = false;
+                        if (is_array($sessionFiles[$field])) {
+                            foreach ($sessionFiles[$field] as $fileOptions) {
+                                if ($fileOptions['name'] === $name) {
+                                    $exists = true;
                                 }
                             }
+                        }
 
-                            if (!$exists || $uploadedFilesWithSameNameAction === 'replace' || $uploadedFilesWithSameNameAction === 'append') {
-                                $name = $this->formUtility->doFileNameReplace($name);
-                                $filename = substr($name, 0, strpos($name, '.'));
-                                if (strlen($filename) > 0) {
-                                    $ext = substr($name, strpos($name, '.'));
-                                    $suffix = 1;
+                        if (!$exists || $uploadedFilesWithSameNameAction === 'replace' || $uploadedFilesWithSameNameAction === 'append') {
+                            $name = $this->formUtility->doFileNameReplace($name);
+                            $filename = substr($name, 0, strpos($name, '.'));
+                            if (strlen($filename) > 0) {
+                                $ext = substr($name, strpos($name, '.'));
+                                $suffix = 1;
 
-                                    //build file name
-                                    $uploadedFileName = $filename . $ext;
+                                //build file name
+                                $uploadedFileName = $filename . $ext;
 
-                                    if ($uploadedFilesWithSameNameAction !== 'replace') {
-                                        //rename if exists
-                                        while (file_exists($uploadPath . $uploadedFileName)) {
-                                            $uploadedFileName = $filename . '_' . $suffix . $ext;
-                                            $suffix++;
-                                        }
+                                if ($uploadedFilesWithSameNameAction !== 'replace') {
+                                    //rename if exists
+                                    while (file_exists($uploadPath . $uploadedFileName)) {
+                                        $uploadedFileName = $filename . '_' . $suffix . $ext;
+                                        $suffix++;
                                     }
-                                    $files['name'][$field][$idx] = $uploadedFileName;
+                                }
+                                $files['name'][$field][$idx] = $uploadedFileName;
 
-                                    //move from temp folder to temp upload folder
-                                    if (!is_array($files['tmp_name'][$field])) {
-                                        $files['tmp_name'][$field] = [$files['tmp_name'][$field]];
-                                    }
-                                    move_uploaded_file($files['tmp_name'][$field][$idx], $uploadPath . $uploadedFileName);
-                                    GeneralUtility::fixPermissions($uploadPath . $uploadedFileName);
-                                    $files['uploaded_name'][$field][$idx] = $uploadedFileName;
+                                //move from temp folder to temp upload folder
+                                if (!is_array($files['tmp_name'][$field])) {
+                                    $files['tmp_name'][$field] = [$files['tmp_name'][$field]];
+                                }
+                                move_uploaded_file($files['tmp_name'][$field][$idx], $uploadPath . $uploadedFileName);
+                                GeneralUtility::fixPermissions($uploadPath . $uploadedFileName);
+                                $files['uploaded_name'][$field][$idx] = $uploadedFileName;
 
-                                    //set values for session
-                                    $tmp['name'] = $name;
-                                    $tmp['uploaded_name'] = $uploadedFileName;
-                                    $tmp['uploaded_path'] = $uploadPath;
-                                    $uploadFolder = str_replace(Environment::getPublicPath(), '', $uploadPath);
-                                    $tmp['uploaded_folder'] = $uploadFolder;
+                                //set values for session
+                                $tmp['name'] = $name;
+                                $tmp['uploaded_name'] = $uploadedFileName;
+                                $tmp['uploaded_path'] = $uploadPath;
+                                $uploadFolder = str_replace(Environment::getPublicPath(), '', $uploadPath);
+                                $tmp['uploaded_folder'] = $uploadFolder;
 
-                                    $uploadedUrl = rtrim(GeneralUtility::getIndpEnv('TYPO3_SITE_URL'), '/');
-                                    $uploadedUrl .= '/' . trim($uploadFolder, '/') . '/';
-                                    $uploadedUrl .= trim($uploadedFileName, '/');
+                                $uploadedUrl = rtrim(GeneralUtility::getIndpEnv('TYPO3_SITE_URL'), '/');
+                                $uploadedUrl .= '/' . trim($uploadFolder, '/') . '/';
+                                $uploadedUrl .= trim($uploadedFileName, '/');
 
-                                    $tmp['uploaded_url'] = $uploadedUrl;
-                                    if (is_array($files['size'][$field][$idx])) {
-                                        $tmp['size'] = $files['size'][$field][$idx];
-                                    } else {
-                                        $tmp['size'] = $files['size'][$field];
+                                $tmp['uploaded_url'] = $uploadedUrl;
+                                if (is_array($files['size'][$field][$idx])) {
+                                    $tmp['size'] = $files['size'][$field][$idx];
+                                } else {
+                                    $tmp['size'] = $files['size'][$field];
+                                }
+                                if (is_array($files['type'][$field][$idx])) {
+                                    $tmp['type'] = $files['type'][$field][$idx];
+                                } else {
+                                    $tmp['type'] = $files['type'][$field];
+                                }
+                                if (!is_array($tempFiles[$field]) && strlen($field) > 0) {
+                                    $tempFiles[$field] = [];
+                                }
+                                if (!$exists || $uploadedFilesWithSameNameAction !== 'replace') {
+                                    $tempFiles[$field][] = $tmp;
+                                    foreach ($tempFiles[$field] as $fileIndex => &$tempFile) {
+                                        $tempFile['index'] = $fileIndex;
+                                        $tempFile['field'] = $field;
                                     }
-                                    if (is_array($files['type'][$field][$idx])) {
-                                        $tmp['type'] = $files['type'][$field][$idx];
-                                    } else {
-                                        $tmp['type'] = $files['type'][$field];
-                                    }
-                                    if (!is_array($tempFiles[$field]) && strlen($field) > 0) {
-                                        $tempFiles[$field] = [];
-                                    }
-                                    if (!$exists || $uploadedFilesWithSameNameAction !== 'replace') {
-                                        $tempFiles[$field][] = $tmp;
-                                        foreach ($tempFiles[$field] as $fileIndex => &$tempFile) {
-                                            $tempFile['index'] = $fileIndex;
-                                            $tempFile['field'] = $field;
-                                        }
-                                    }
-                                    if (!is_array($this->gp[$field])) {
-                                        $this->gp[$field] = [];
-                                    }
-                                    if (!$exists || $uploadedFilesWithSameNameAction !== 'replace') {
-                                        $this->gp[$field][] = $uploadedFileName;
-                                    }
+                                }
+                                if (!is_array($this->gp[$field])) {
+                                    $this->gp[$field] = [];
+                                }
+                                if (!$exists || $uploadedFilesWithSameNameAction !== 'replace') {
+                                    $this->gp[$field][] = $uploadedFileName;
                                 }
                             }
                         }

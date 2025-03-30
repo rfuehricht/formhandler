@@ -74,7 +74,7 @@ class DefaultValidator extends AbstractValidator
     }
 
     /**
-     * Recursively calls the configured errorChecks. It's possible to setup
+     * Recursively calls the configured errorChecks. It's possible to set up
      * errorChecks for each key in multidimensional arrays:
      *
      * <code title="errorChecks for arrays">
@@ -115,22 +115,18 @@ class DefaultValidator extends AbstractValidator
     protected function validateRecursive(array $errors, array $gp, array $fieldConf, string $rootField = null): array
     {
 
-
         //foreach configured form field
         foreach ($fieldConf as $fieldName => $fieldSettings) {
-            if (!array_key_exists($fieldName, $gp)) {
-                continue;
-            }
 
             $errorFieldName = ($rootField === null) ? $fieldName : $rootField;
 
             $tempSettings = $fieldSettings;
-            if (count($tempSettings)) {
+            if (is_array($tempSettings) && !isset($tempSettings['_typoScriptNodeValue'])) {
                 // Nested field-configurations - do recursion:
-                $errors = $this->validateRecursive($errors, (array)$gp[$fieldName], $tempSettings, $errorFieldName);
+                $errors = $this->validateRecursive($errors, (array)($gp[$fieldName] ?? []), $tempSettings, $errorFieldName);
             }
 
-            if (!is_array($fieldSettings['errorCheck'])) {
+            if (!isset($fieldSettings['errorCheck']) || !is_array($fieldSettings['errorCheck'])) {
                 continue;
             }
 
@@ -139,6 +135,7 @@ class DefaultValidator extends AbstractValidator
 
             //set required to first position if set
             foreach ($fieldSettings['errorCheck'] as $checkKey => $check) {
+                $check = $check['_typoScriptNodeValue'] ?? trim($check);
                 if (!strcmp($check, 'required') || !strcmp($check, 'file_required')) {
                     $errorChecks[$counter]['check'] = $check;
                     unset($fieldSettings['errorCheck'][$checkKey]);
@@ -146,8 +143,10 @@ class DefaultValidator extends AbstractValidator
                 }
             }
 
+
             //set other errorChecks
             foreach ($fieldSettings['errorCheck'] as $checkKey => $check) {
+                $check = $check['_typoScriptNodeValue'] ?? trim($check);
                 $errorChecks[$counter]['check'] = $check;
                 if (is_array($fieldSettings['errorCheck'][$checkKey])) {
                     $errorChecks[$counter]['params'] = $fieldSettings['errorCheck'][$checkKey];
@@ -180,8 +179,10 @@ class DefaultValidator extends AbstractValidator
                 /** @var AbstractErrorCheck $errorCheckObject */
 
                 if (empty($this->restrictErrorChecks) || in_array($check['check'], $this->restrictErrorChecks)) {
-                    $checkFailed = $errorCheckObject->check($fieldName, $gp);
+
+                    $checkFailed = $errorCheckObject->check($fieldName, $gp, $check['params'] ?? []);
                     if (strlen($checkFailed) > 0) {
+                        $errors[$errorFieldName] = $errors[$errorFieldName] ?? [];
                         if (!is_array($errors[$errorFieldName])) {
                             $errors[$errorFieldName] = [];
                         }

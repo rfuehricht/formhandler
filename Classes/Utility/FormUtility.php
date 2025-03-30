@@ -2,18 +2,6 @@
 
 namespace Rfuehricht\Formhandler\Utility;
 
-/*                                                                        *
- * This script is part of the TYPO3 project - inspiring people to share!  *
- *                                                                        *
- * TYPO3 is free software; you can redistribute it and/or modify it under *
- * the terms of the GNU General Public License version 2 as published by  *
- * the Free Software Foundation.                                          *
- *                                                                        *
- * This script is distributed in the hope that it will be useful, but     *
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHAN-    *
- * TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General      *
- * Public License for more details.                                       *
- *                                                                        */
 
 use DateTime;
 use Exception;
@@ -37,6 +25,54 @@ class FormUtility implements SingletonInterface
     )
     {
 
+    }
+
+    public function getFilesArray(): array
+    {
+        $uploadedFiles = $_FILES['tx_formhandler_form'] ?? $_FILES ?? [];
+        $formValuesPrefix = $this->globals->getFormValuesPrefix();
+        if ($formValuesPrefix) {
+            foreach ($uploadedFiles as &$info) {
+                if (isset($info[$formValuesPrefix])) {
+                    $info = $info[$formValuesPrefix];
+                }
+            }
+            unset($info);
+        }
+
+        return $uploadedFiles;
+    }
+
+    /**
+     * Convert a shorthand byte value from a PHP configuration directive to an integer value
+     *
+     * Copied from http://www.php.net/manual/de/faq.using.php#78405
+     *
+     * @param string $value
+     *
+     * @return int
+     */
+    public function convertBytes(string $value): int
+    {
+        if (is_numeric($value)) {
+            return $value;
+        } else {
+            $value_length = strlen($value);
+            $qty = intval(substr($value, 0, $value_length - 1));
+            $unit = strtolower(substr($value, $value_length - 1));
+            switch ($unit) {
+                case 'k':
+                    $qty *= 1024;
+                    break;
+                case 'm':
+                    $qty *= 1048576;
+                    break;
+                case 'g':
+                    $qty *= 1073741824;
+                    break;
+            }
+            return $qty;
+        }
     }
 
     /**

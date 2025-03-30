@@ -10,7 +10,7 @@ namespace Rfuehricht\Formhandler\Validator\ErrorCheck;
 class Required extends AbstractErrorCheck
 {
 
-    public function check(string $fieldName, array $values): string
+    public function check(string $fieldName, array $values, array $settings = []): string
     {
         $checkFailed = '';
         if (!isset($values[$fieldName]) || strlen(trim($values[$fieldName])) == 0) {

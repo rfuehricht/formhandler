@@ -3,6 +3,9 @@
 namespace Rfuehricht\Formhandler\Validator\ErrorCheck;
 
 
+use Rfuehricht\Formhandler\Utility\FormUtility;
+use Rfuehricht\Formhandler\Utility\Globals;
+
 /**
  * Abstract class for error checks for Formhandler
  *
@@ -10,13 +13,20 @@ namespace Rfuehricht\Formhandler\Validator\ErrorCheck;
 abstract class AbstractErrorCheck
 {
 
+    public function __construct(
+        protected readonly FormUtility $formUtility,
+        protected readonly Globals     $globals
+    )
+    {
+
+    }
 
     /**
      * Sets the suitable string for the checkFailed message parsed in view.
      *
      * @return string If the check failed, the string contains the name of the failed check plus the parameters and values.
      */
-    abstract public function check(string $fieldName, array $values): string;
+    abstract public function check(string $fieldName, array $values, array $settings = []): string;
 
     /**
      * Sets the suitable string for the checkFailed message parsed in view.
