@@ -18,6 +18,7 @@ namespace Rfuehricht\Formhandler\Utility;
 use DateTime;
 use Exception;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Crypto\HashService;
 use TYPO3\CMS\Core\Crypto\Random;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -211,7 +212,7 @@ class FormUtility implements SingletonInterface
      * @param string $className
      * @return string
      */
-    public function prepareClassName(string $className, $prefix = ''): string
+    public function prepareClassName(string $className): string
     {
         $className = trim($className);
         $className = ltrim($className, '\\');
@@ -221,10 +222,7 @@ class FormUtility implements SingletonInterface
             $className = 'Rfuehricht\\Formhandler\\Validator\\DefaultValidator';
         }
         if (!str_contains($className, '\\')) {
-            if ($prefix) {
-                $className = $prefix . '\\' . $className;
-            }
-            $className = 'Rfuehricht\\Formhandler\\' . $className;
+            $className = 'Rfuehricht\\Formhandler\\Component\\' . $className;
         }
         if (substr_count($className, '\\') === 1) {
             $className = 'Rfuehricht\\Formhandler\\' . $className;
@@ -237,6 +235,19 @@ class FormUtility implements SingletonInterface
     public function generateRandomId(): string
     {
         return md5(GeneralUtility::makeInstance(Random::class)->generateRandomBytes(16));
+    }
+
+    /**
+     * Return a hash value to send by email as an auth code.
+     *
+     * @param array $row The submitted form data
+     * @return string The auth code
+     */
+    public function generateAuthCode(array $row): string
+    {
+        /** @var HashService $hashService */
+        $hashService = GeneralUtility::makeInstance(HashService::class);
+        return $hashService->hmac(serialize($row), 'formhandler');
     }
 
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Rfuehricht\Formhandler\Finisher;
+namespace Rfuehricht\Formhandler\Component;
 
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -12,10 +12,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Finisher to send emails after successful form submission.
- *
- *
  */
-class Email extends AbstractFinisher
+class Email extends AbstractComponent
 {
 
     /**
@@ -38,9 +36,6 @@ class Email extends AbstractFinisher
      */
     protected function sendMail(): void
     {
-
-        $mailSettings = $this->settings;
-
         $templateFile = $this->settings['templateFile'] ?? '';
         if (!$templateFile) {
             return;
@@ -52,21 +47,21 @@ class Email extends AbstractFinisher
 
 
         //set e-mail options
-        $email->subject($mailSettings['subject'] ?? '');
+        $email->subject($this->settings['subject'] ?? '');
 
-        if (isset($mailSettings['sender']['email'])) {
-            $email->sender($this->getAddress($mailSettings['sender']));
+        if (isset($this->settings['sender']['email'])) {
+            $email->sender($this->getAddress($this->settings['sender']));
         }
 
-        $email->replyTo(...$this->getAddresses($mailSettings['replyTo'] ?? []));
-        $email->cc(...$this->getAddresses($mailSettings['cc'] ?? []));
-        $email->bcc(...$this->getAddresses($mailSettings['bcc'] ?? []));
+        $email->replyTo(...$this->getAddresses($this->settings['replyTo'] ?? []));
+        $email->cc(...$this->getAddresses($this->settings['cc'] ?? []));
+        $email->bcc(...$this->getAddresses($this->settings['bcc'] ?? []));
 
-        if (isset($mailSettings['returnPath']['email'])) {
-            $email->returnPath($this->getAddress($mailSettings['returnPath']));
+        if (isset($this->settings['returnPath']['email'])) {
+            $email->returnPath($this->getAddress($this->settings['returnPath']));
         }
 
-        $attachments = $mailSettings['attachments'] ?? $mailSettings['attachment'] ?? [];
+        $attachments = $this->settings['attachments'] ?? $this->settings['attachment'] ?? [];
         if (!is_array($attachments)) {
             $attachments = GeneralUtility::trimExplode(',', $attachments);
         }
@@ -91,7 +86,7 @@ class Email extends AbstractFinisher
             'values' => $this->gp
         ]);
 
-        $email->to(...$this->getAddresses($mailSettings['to'] ?? []));
+        $email->to(...$this->getAddresses($this->settings['to'] ?? []));
 
         GeneralUtility::makeInstance(MailerInterface::class)->send($email);
 

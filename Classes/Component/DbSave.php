@@ -1,6 +1,6 @@
 <?php
 
-namespace Rfuehricht\Formhandler\Finisher;
+namespace Rfuehricht\Formhandler\Component;
 
 
 use Psr\Http\Message\ResponseInterface;
@@ -14,7 +14,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * Example configuration:
  *
  * <code>
- * finishers.1.class = Finisher\DbSave
+ * finishers.1.class = DbSave
  *
  * #The table to store the records in
  * finishers.1.config.table = tt_content
@@ -49,7 +49,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  *
 
  */
-class DbSave extends AbstractFinisher
+class DbSave extends AbstractComponent
 {
 
     /**

@@ -2,12 +2,14 @@
 
 namespace Rfuehricht\Formhandler\Controller;
 
+use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Rfuehricht\Formhandler\Component\AbstractComponent;
 use Rfuehricht\Formhandler\Utility\FormUtility;
 use Rfuehricht\Formhandler\Utility\Globals;
 use Rfuehricht\Formhandler\Validator\AbstractValidator;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -60,7 +62,7 @@ class FormController extends ActionController
         }
 
         if (empty($this->gp)) {
-            $result = $this->runClasses($this->settings['preProcessors'] ?? [], 'PreProcessor');
+            $result = $this->runClasses($this->settings['preProcessors'] ?? []);
             if ($result) {
                 return $result;
             }
@@ -115,7 +117,7 @@ class FormController extends ActionController
         $this->globals->getSession()->set('currentStep', $currentStep);
 
         if (!$templateFile) {
-            $result = $this->runClasses($this->settings['finishers'] ?? [], 'Finisher');
+            $result = $this->runClasses($this->settings['finishers'] ?? []);
             if ($result) {
                 return $result;
             }
@@ -194,21 +196,25 @@ class FormController extends ActionController
         return $wantedStepOrAction;
     }
 
-    protected function runClasses(array $classes, string $prefix = ''): ?ResponseInterface
+    protected function runClasses(array $classes): ?ResponseInterface
     {
-        foreach ($classes as $classSettings) {
-            $className = $this->formUtility->prepareClassName($classSettings['class'] ?? 'Default', $prefix);
+        try {
+            foreach ($classes as $classSettings) {
+                $className = $this->formUtility->prepareClassName($classSettings['class'] ?? 'Default');
 
-            if (is_array($classSettings) && strlen($className) > 0) {
-                /** @var AbstractComponent $classObject */
-                $classObject = GeneralUtility::makeInstance($className);
-                $classObject->init($this->gp, $classSettings['config'] ?? [], $this->request);
-                $result = $classObject->process();
-                if (!is_array($result)) {
-                    return $result;
+                if (is_array($classSettings) && strlen($className) > 0) {
+                    /** @var AbstractComponent $classObject */
+                    $classObject = GeneralUtility::makeInstance($className);
+                    $classObject->init($this->gp, $classSettings['config'] ?? [], $this->request);
+                    $result = $classObject->process();
+                    if (!is_array($result)) {
+                        return $result;
+                    }
+                    $this->gp = $result;
                 }
-                $this->gp = $result;
             }
+        } catch (Exception $e) {
+            return new HtmlResponse($e->getMessage());
         }
         return null;
     }
@@ -322,7 +328,7 @@ class FormController extends ActionController
                         foreach ($uploadedFiles as $idx => $name) {
                             $exists = false;
                             if (is_array($sessionFiles[$field])) {
-                                foreach ($sessionFiles[$field] as $fileId => $fileOptions) {
+                                foreach ($sessionFiles[$field] as $fileOptions) {
                                     if ($fileOptions['name'] === $name) {
                                         $exists = true;
                                     }

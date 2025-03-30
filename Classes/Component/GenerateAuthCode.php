@@ -1,9 +1,8 @@
 <?php
 
-namespace Rfuehricht\Formhandler\Finisher;
+namespace Rfuehricht\Formhandler\Component;
 
 use Psr\Http\Message\ResponseInterface;
-use TYPO3\CMS\Core\Crypto\HashService;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -13,9 +12,8 @@ use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
  * This finisher generates a unique code for a database entry.
  * This can be used for FE user registration or newsletter registration.
  *
-
  */
-class GenerateAuthCode extends AbstractFinisher
+class GenerateAuthCode extends AbstractComponent
 {
     /**
      * The main method called by the controller
@@ -73,7 +71,7 @@ class GenerateAuthCode extends AbstractFinisher
                 ->fetchAssociative();
 
             if ($row) {
-                $authCode = self::generateAuthCode($row);
+                $authCode = $this->formUtility->generateAuthCode($row);
 
                 $pageArguments = $this->request->getAttribute('routing');
                 $pageId = $pageArguments->getPageId();
@@ -115,16 +113,4 @@ class GenerateAuthCode extends AbstractFinisher
     }
 
 
-    /**
-     * Return a hash value to send by email as an auth code.
-     *
-     * @param array The submitted form data
-     * @return string The auth code
-     */
-    public function generateAuthCode(array $row): string
-    {
-        /** @var HashService $hashService */
-        $hashService = GeneralUtility::makeInstance(HashService::class);
-        return $hashService->hmac(serialize($row), 'formhandler');
-    }
 }
