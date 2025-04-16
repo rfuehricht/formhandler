@@ -105,14 +105,14 @@ class FormController extends ActionController
                 } elseif ($wantedStep === $currentStep || $wantedStep === $currentStep - 1) {
 
                     //Submit reload action for uploading files
-                    /*if ($wantedStep === $currentStep) {
+                    if ($wantedStep === $currentStep) {
                         //Run validations
-                        $errors = $this->runFileValidations();
+                        $errors = $this->runValidations(fileChecksOnly: true);
 
                         if (empty($errors)) {
                             $this->processFiles();
                         }
-                    }*/
+                    }
 
                     $currentStep = $wantedStep;
                     if ($currentStep < 1) {
@@ -309,12 +309,9 @@ class FormController extends ActionController
     {
         $values = $this->globals->getSession()->get('values') ?? [];
 
-        $valuesToMerge = [];
-        foreach ($this->gp as $name => $value) {
-            if (!str_starts_with($name, 'submit-') && $name !== 'randomId') {
-                $valuesToMerge[$name] = $value;
-            }
-        }
+        $valuesToMerge = array_filter($this->gp, function ($name) {
+            return !str_starts_with($name, 'submit-') && $name !== 'randomId';
+        }, ARRAY_FILTER_USE_KEY);
         ArrayUtility::mergeRecursiveWithOverrule($values, $valuesToMerge);
 
         $this->gp = $values;
@@ -330,7 +327,11 @@ class FormController extends ActionController
         }
     }
 
-    protected function runValidations(): array
+    /**
+     * @param bool $fileChecksOnly
+     * @return array
+     */
+    protected function runValidations(bool $fileChecksOnly = false): array
     {
         $isValid = true;
 
@@ -346,7 +347,7 @@ class FormController extends ActionController
                         /** @var AbstractValidator $validator */
                         $validator = GeneralUtility::makeInstance($className);
                         $validator->init($this->gp, $tsConfig['config'] ?? [], $this->request);
-                        $isValid = $validator->validate($errors);
+                        $isValid = $validator->validate($errors, $fileChecksOnly);
 
                     }
                 }

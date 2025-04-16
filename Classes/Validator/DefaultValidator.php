@@ -15,13 +15,16 @@ class DefaultValidator extends AbstractValidator
     protected array $restrictErrorChecks = [];
     protected array $disableErrorCheckFields = [];
 
+    protected bool $fileChecksOnly = false;
+
     /**
      * Validates the submitted values using given settings
      *
-     * @param array &$errors Reference to the errors array to store the errors occurred
+     * @param array &$errors
+     * @param bool $fileChecksOnly
      * @return boolean
      */
-    public function validate(array &$errors): bool
+    public function validate(array &$errors, bool $fileChecksOnly = false): bool
     {
 
         //no config? validation returns TRUE
@@ -49,6 +52,8 @@ class DefaultValidator extends AbstractValidator
         if (isset($this->settings['restrictErrorChecks'])) {
             $this->restrictErrorChecks = GeneralUtility::trimExplode(',', $this->settings['restrictErrorChecks']);
         }
+
+        $this->fileChecksOnly = $fileChecksOnly;
 
         if (!in_array('all', array_keys($this->disableErrorCheckFields))) {
             $errors = $this->validateRecursive($errors, $this->gp, $this->settings['fieldConf']);
@@ -157,6 +162,10 @@ class DefaultValidator extends AbstractValidator
             //foreach error checks
             foreach ($errorChecks as $check) {
 
+                if ($this->fileChecksOnly && !str_starts_with($check['check'], 'file')) {
+                    continue;
+                }
+
                 //Skip error check if the check is disabled for this field or if all checks are disabled for this field
                 if (!empty($this->disableErrorCheckFields) &&
                     in_array($errorFieldName, array_keys($this->disableErrorCheckFields)) &&
@@ -177,7 +186,6 @@ class DefaultValidator extends AbstractValidator
                 }
 
                 /** @var AbstractErrorCheck $errorCheckObject */
-
                 if (empty($this->restrictErrorChecks) || in_array($check['check'], $this->restrictErrorChecks)) {
 
                     $checkFailed = $errorCheckObject->check($fieldName, $gp, $check['params'] ?? []);
