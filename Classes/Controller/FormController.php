@@ -10,11 +10,14 @@ use Rfuehricht\Formhandler\Utility\Globals;
 use Rfuehricht\Formhandler\Validator\AbstractValidator;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Http\HtmlResponse;
+use TYPO3\CMS\Core\Http\NullResponse;
 use TYPO3\CMS\Core\Page\AssetCollector;
+use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 
 class FormController extends ActionController
@@ -33,6 +36,7 @@ class FormController extends ActionController
 
     public function formAction(): ResponseInterface
     {
+
         $this->checkPredefinedFormToUse();
 
         GeneralUtility::makeInstance(AssetCollector::class)
@@ -68,8 +72,14 @@ class FormController extends ActionController
             }
         }
         $this->mergeGPWithSession();
+        $this->globals->setValues($this->gp);
 
         $this->updateSettings($currentStep);
+
+        $result = $this->runClasses($this->settings['interceptors'] ?? []);
+        if ($result) {
+            return $result;
+        }
 
 
         $errors = [];
@@ -116,6 +126,7 @@ class FormController extends ActionController
 
 
         $this->mergeGPWithSession();
+        $this->globals->setValues($this->gp);
 
 
         $templateFile = null;
@@ -127,12 +138,16 @@ class FormController extends ActionController
         $this->globals->getSession()->set('lastStep', $lastStep);
         $this->globals->getSession()->set('currentStep', $currentStep);
 
-        if (!$templateFile) {
+        $skipView = $this->settings['skipView'] ?? false;
+        if (!$templateFile || $skipView) {
+
             $result = $this->runClasses($this->settings['finishers'] ?? []);
             if ($result) {
                 return $result;
             }
         }
+
+        $this->globals->setErrors($errors);
 
         $this->view->assignMultiple([
             'formValuesPrefix' => $this->globals->getFormValuesPrefix(),
@@ -148,6 +163,60 @@ class FormController extends ActionController
             'errors' => $errors
         ]);
 
+        $inlineSettings = [];
+        if (isset($this->settings['clientSideValidation']) && boolval($this->settings['clientSideValidation']) === true) {
+            $inlineSettings['clientSideValidation'] = true;
+        }
+        if (isset($this->settings['ajaxSubmit']) && boolval($this->settings['ajaxSubmit']) === true) {
+            $inlineSettings['ajaxSubmit'] = true;
+        }
+        $inlineSettings['formValuesPrefix'] = $this->globals->getFormValuesPrefix();
+
+        if (isset($this->settings['validators'])) {
+            foreach ($this->settings['validators'] as $validator) {
+                if (isset($validator['config']['fieldConf'])) {
+                    foreach ($validator['config']['fieldConf'] as $fieldName => $fieldConf) {
+                        if (isset($fieldConf['errorCheck'])) {
+                            if (!isset($inlineSettings['validations'])) {
+                                $inlineSettings['validations'] = [];
+                            }
+                            if (!isset($inlineSettings['validations'][$fieldName])) {
+                                $inlineSettings['validations'][$fieldName] = [];
+                            }
+                            foreach ($fieldConf['errorCheck'] as $errorCheck) {
+                                $errorCheckName = $errorCheck;
+                                if (isset($errorCheck['_typoScriptNodeValue'])) {
+                                    $errorCheckName = $errorCheck['_typoScriptNodeValue'];
+                                    unset($errorCheck['_typoScriptNodeValue']);
+                                }
+                                $inlineSettings['validations'][$fieldName][] = [
+                                    'check' => $errorCheckName,
+                                    'options' => is_array($errorCheck) ? $errorCheck : []
+                                ];
+                            }
+                        }
+
+
+                    }
+                }
+            }
+        }
+
+        if (!empty($inlineSettings)) {
+
+            $this->view->assign('validations', $inlineSettings['validations']);
+            $this->globals->setValidations($inlineSettings['validations'] ?? []);
+
+            /** @var ContentObjectRenderer $contentObjectRenderer */
+            $contentObjectRenderer = $this->request->getAttribute('currentContentObject');
+            $inlineSettings[$contentObjectRenderer->data['uid']] = $inlineSettings;
+            /** @var PageRenderer $pageRenderer */
+            $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
+            $pageRenderer->addInlineSettingArray('formhandler', $inlineSettings);
+        }
+        if ($skipView) {
+            return new NullResponse();
+        }
         return $this->htmlResponse($this->view->render($templateFile));
     }
 
@@ -218,6 +287,7 @@ class FormController extends ActionController
                     $classObject = GeneralUtility::makeInstance($className);
                     $classObject->init($this->gp, $classSettings['config'] ?? [], $this->request);
                     $result = $classObject->process();
+
                     if (!is_array($result)) {
                         return $result;
                     }
@@ -239,7 +309,13 @@ class FormController extends ActionController
     {
         $values = $this->globals->getSession()->get('values') ?? [];
 
-        ArrayUtility::mergeRecursiveWithOverrule($values, $this->gp);
+        $valuesToMerge = [];
+        foreach ($this->gp as $name => $value) {
+            if (!str_starts_with($name, 'submit-') && $name !== 'randomId') {
+                $valuesToMerge[$name] = $value;
+            }
+        }
+        ArrayUtility::mergeRecursiveWithOverrule($values, $valuesToMerge);
 
         $this->gp = $values;
     }

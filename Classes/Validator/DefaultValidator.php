@@ -181,7 +181,15 @@ class DefaultValidator extends AbstractValidator
                 if (empty($this->restrictErrorChecks) || in_array($check['check'], $this->restrictErrorChecks)) {
 
                     $checkFailed = $errorCheckObject->check($fieldName, $gp, $check['params'] ?? []);
-                    if (strlen($checkFailed) > 0) {
+                    if (is_array($checkFailed)) {
+                        foreach ($checkFailed as $field => $failedCheck) {
+                            $errors[$field] = $errors[$field] ?? [];
+                            if (!is_array($errors[$field])) {
+                                $errors[$field] = [];
+                            }
+                            $errors[$field][] = $failedCheck;
+                        }
+                    } else if (strlen($checkFailed) > 0) {
                         $errors[$errorFieldName] = $errors[$errorFieldName] ?? [];
                         if (!is_array($errors[$errorFieldName])) {
                             $errors[$errorFieldName] = [];

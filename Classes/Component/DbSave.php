@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 /**
  * This finisher stores the submitted values into a table in the TYPO3 database according to the configuration
@@ -188,7 +189,12 @@ class DbSave extends AbstractComponent
             if (isset($options) && is_array($options)) {
                 if (!isset($options['special'])) {
                     $mapping = $options['mapping'] ?? $fieldName;
-                    $fieldValue = $this->gp[$fieldName] ?? '';
+                    if (isset($mapping['_typoScriptNodeValue'])) {
+                        /** @var ContentObjectRenderer $contentObjectRenderer */
+                        $contentObjectRenderer = $this->request->getAttribute('currentContentObject');
+                        $mapping = $contentObjectRenderer->cObjGetSingle($mapping['_typoScriptNodeValue'], $mapping);
+                    }
+                    $fieldValue = $this->gp[$mapping] ?? '';
 
 
                     //preprocess the field value. e.g. to format a date
@@ -390,12 +396,6 @@ class DbSave extends AbstractComponent
     protected function save(array $queryFields): bool
     {
 
-        if (!isset($queryFields['pid'])) {
-            $pageArguments = $this->request->getAttribute('routing');
-            $pageId = $pageArguments->getPageId();
-            $queryFields['pid'] = $pageId;
-        }
-
         //insert
         if (!$this->doUpdate) {
             $isSuccess = $this->doInsert($queryFields);
@@ -412,6 +412,7 @@ class DbSave extends AbstractComponent
 
     protected function doInsert(array $queryFields): bool
     {
+
         $affectedRows = $this->queryBuilder
             ->insert($this->table)
             ->values($queryFields)

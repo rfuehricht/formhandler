@@ -23,6 +23,12 @@ class Globals implements SingletonInterface
 
     protected array $settings = [];
 
+    protected array $values = [];
+
+    protected array $errors = [];
+
+    protected array $validations = [];
+
 
     public function getSession(): AbstractSession
     {
@@ -77,6 +83,36 @@ class Globals implements SingletonInterface
     public function setView(ViewInterface $view): void
     {
         $this->view = $view;
+    }
+
+    public function getValues(): array
+    {
+        return $this->values;
+    }
+
+    public function setValues(array $values): void
+    {
+        $this->values = $values;
+    }
+
+    public function getErrors(): array
+    {
+        return $this->errors;
+    }
+
+    public function setErrors(array $errors): void
+    {
+        $this->errors = $errors;
+    }
+
+    public function getValidations(): array
+    {
+        return $this->validations;
+    }
+
+    public function setValidations(array $validations): void
+    {
+        $this->validations = $validations;
     }
 
 

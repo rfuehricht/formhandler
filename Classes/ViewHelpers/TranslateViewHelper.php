@@ -27,14 +27,23 @@ final class TranslateViewHelper extends AbstractViewHelper
         }
         $value = '';
         foreach ($languageFiles as $languageFile) {
-            if (!str_starts_with($languageFile, 'LLL:')) {
-                $languageFile = 'LLL:' . $languageFile;
+            if ($value === '' || $value === null) {
+                if (!str_starts_with($languageFile, 'LLL:')) {
+                    $languageFile = 'LLL:' . $languageFile;
+                }
+                $value = LocalizationUtility::translate(
+                    key: $languageFile . ':' . $key,
+                    arguments: $this->arguments['arguments'] ?? []
+                );
+                if (!$value) {
+                    $value = LocalizationUtility::translate(
+                        key: $languageFile . ':' . strtolower($key),
+                        arguments: $this->arguments['arguments'] ?? []
+                    );
+                }
             }
-            $value = LocalizationUtility::translate(
-                key: $languageFile . ':' . $key,
-                arguments: $this->arguments['arguments'] ?? []);
         }
-        return $value;
+        return $value ?? '';
 
     }
 

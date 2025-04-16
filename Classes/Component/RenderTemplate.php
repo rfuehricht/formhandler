@@ -33,7 +33,8 @@ class RenderTemplate extends AbstractComponent
 
             $view = $this->globals->getView();
             $view->assignMultiple([
-                'values' => $this->gp
+                'values' => $this->gp,
+                'config' => $this->settings
             ]);
             return new HtmlResponse($view->render($templateFile));
         }

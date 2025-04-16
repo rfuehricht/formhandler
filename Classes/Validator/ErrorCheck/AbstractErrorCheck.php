@@ -24,9 +24,12 @@ abstract class AbstractErrorCheck
     /**
      * Sets the suitable string for the checkFailed message parsed in view.
      *
-     * @return string If the check failed, the string contains the name of the failed check plus the parameters and values.
+     * @param string $fieldName
+     * @param array $values
+     * @param array $settings
+     * @return string|array If the check failed, the string contains the name of the failed check plus the parameters and values.
      */
-    abstract public function check(string $fieldName, array $values, array $settings = []): string;
+    abstract public function check(string $fieldName, array $values, array $settings = []): string|array;
 
     /**
      * Sets the suitable string for the checkFailed message parsed in view.
