@@ -13,6 +13,9 @@ class FileRequired extends AbstractErrorCheck
     {
         $checkFailed = '';
         $sessionFiles = $this->globals->getSession()->get('files');
+        if (!isset($sessionFiles[$fieldName]) || !is_array($sessionFiles[$fieldName])) {
+            $sessionFiles[$fieldName] = [];
+        }
         $found = false;
         $files = $this->formUtility->getFilesArray();
 

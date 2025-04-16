@@ -13,6 +13,9 @@ class FileMinCount extends AbstractErrorCheck
         $checkFailed = '';
 
         $sessionFiles = $this->globals->getSession()->get('files');
+        if (!isset($sessionFiles[$fieldName]) || !is_array($sessionFiles[$fieldName])) {
+            $sessionFiles[$fieldName] = [];
+        }
         $currentStep = $this->globals->getSession()->get('currentStep');
         $lastStep = $this->globals->getSession()->get('lastStep');
         $minCount = $settings['minCount'];
@@ -21,6 +24,9 @@ class FileMinCount extends AbstractErrorCheck
         ) {
 
             $files = $this->formUtility->getFilesArray();
+            if (!isset($files['name'][$fieldName])) {
+                $files['name'][$fieldName] = [];
+            }
             if (!is_array($files['name'][$fieldName])) {
                 $files['name'][$fieldName] = [$files['name'][$fieldName]];
             }

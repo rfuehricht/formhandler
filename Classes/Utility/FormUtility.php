@@ -242,6 +242,33 @@ class FormUtility implements SingletonInterface
         return trim(LocalizationUtility::translate('LLL:EXT:formhandler/Resources/Private/Language/locallang_exceptions.xlf:' . $key));
     }
 
+    public function translate(string $key, array $arguments = []): string
+    {
+        $languageFiles = $this->globals->getSettings()['languageFile'] ?? [];
+        if (!is_array($languageFiles) && strlen(trim($languageFiles)) > 0) {
+            $languageFiles = [$languageFiles];
+        }
+        $value = '';
+        foreach ($languageFiles as $languageFile) {
+            if ($value === '' || $value === null) {
+                if (!str_starts_with($languageFile, 'LLL:')) {
+                    $languageFile = 'LLL:' . $languageFile;
+                }
+                $value = LocalizationUtility::translate(
+                    key: $languageFile . ':' . $key,
+                    arguments: $arguments
+                );
+                if (!$value) {
+                    $value = LocalizationUtility::translate(
+                        key: $languageFile . ':' . strtolower($key),
+                        arguments: $arguments
+                    );
+                }
+            }
+        }
+        return $value ?? '';
+    }
+
     /**
      * Adds needed prefix to class name if not set in TS
      *

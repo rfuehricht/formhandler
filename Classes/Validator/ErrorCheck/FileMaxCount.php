@@ -21,6 +21,10 @@ class FileMaxCount extends AbstractErrorCheck
 
         $uploadedFilesWithSameNameAction = $globalSettings['uploadedFilesWithSameName'] ?? 'ignore';
 
+        if (!isset($sessionFiles[$fieldName]) || !is_array($sessionFiles[$fieldName])) {
+            $sessionFiles[$fieldName] = [];
+        }
+
         $files = $this->formUtility->getFilesArray();
         if (is_array($sessionFiles[$fieldName]) &&
             count($sessionFiles[$fieldName]) >= $maxCount &&
@@ -55,14 +59,11 @@ class FileMaxCount extends AbstractErrorCheck
                 }
             }
         } else {
-            if (!is_array($sessionFiles[$fieldName])) {
-                $sessionFiles[$fieldName] = [];
-            }
-            foreach ($files as $info) {
-                if (!is_array($info['name'][$fieldName])) {
-                    $info['name'][$fieldName] = [$info['name'][$fieldName]];
+            if (isset($files['name'])) {
+                if (!isset($files['name'][$fieldName]) || !is_array($files['name'][$fieldName])) {
+                    $files['name'][$fieldName] = [];
                 }
-                if (strlen($info['name'][$fieldName][0]) > 0 && count($info['name'][$fieldName]) + count($sessionFiles[$fieldName]) > $maxCount) {
+                if (count($files['name'][$fieldName]) + count($sessionFiles[$fieldName]) > $maxCount) {
                     $checkFailed = $this->getCheckFailed();
                 }
             }
