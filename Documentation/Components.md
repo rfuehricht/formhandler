@@ -2,11 +2,21 @@
 
 Components are classes that can be added as pre-processors, interceptors or finishers of a form.
 
-
+<!-- TOC -->
+* [loadGetPost](#loadgetpost)
+* [loadDefaultValues](#loaddefaultvalues)
+* [redirect](#redirect)
+* [renderTemplate](#rendertemplate)
+* [dbSave](#dbsave)
+  * [Special Mappings](#special-mappings)
+* [email](#email)
+* [generateAuthCode](#generateauthcode)
+* [validateAuthCode](#validateauthcode)
+<!-- TOC -->
 
 ## loadGetPost
 
-Loads current GET/POST parameters to the internal values. This makes the most sense as a pre-processor, when an external script is passing data to the form. By default Formhandler ignores values that are passed initially.
+Loads current GET/POST parameters to the internal values. This makes the most sense as a pre-processor, when an external script is passing data to the form. By default, Formhandler ignores values that are passed initially.
 
 Example:
 
@@ -106,7 +116,7 @@ Options:
 | fields.[dbField].special        | string     | Special mapping for the database column. Available options are: `ip`, `sub_tstamp`, `sub_datetime`, `datetime`, `inserted_uid`, `files`. Details below in section [Special mappings](#special-mappings)            |
 
 
-### <a name="special-mappings"></a>Special Mappings
+### Special Mappings
 
 
 | Name         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
@@ -134,4 +144,131 @@ finishers {
     }
   }
 }
+```
+
+## email
+
+Send an email.
+
+Options:
+
+| Setting      | Type         | Description                                                                                                                                                                              |
+|--------------|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| templateFile | string       | The template file (without path and file extension) of the mail. Formhandler uses `FluidEmail` to send the mails, so Partials and Layouts should be available from global mail settings. |
+| subject      | string       | Subject of the email.                                                                                                                                                                    |
+| sender       | address      | Consists of `email` and an optional `name` setting.                                                                                                                                      |
+| to           | array        | List of recipients. Each entry consists of `email` and an optional `name` setting.                                                                                                       |
+| cc           | array        | List of recipients. Each entry consists of `email` and an optional `name` setting.                                                                                                       |
+| bcc          | array        | List of recipients. Each entry consists of `email` and an optional `name` setting.                                                                                                       |
+| replyTo      | array        | List of recipients. Each entry consists of `email` and an optional `name` setting.                                                                                                       |
+| returnPath   | address      | Consists of `email` and an optional `name` setting.                                                                                                                                      |
+| attachments  | string,array | List or array of form upload fields or static file names to attach.                                                                                                                      |
+
+
+FLUID variables:
+
+| Variable | Type  | Description                    |
+|----------|-------|--------------------------------|
+| config   | array | The settings of this component |
+| values   | array | The submitted form values      |
+
+Example:
+
+```text
+finishers {
+  10.class = email
+  10.config {
+    templateFile = ContactMailUser
+    to {
+      1 {
+        email = email
+        name = name
+      }
+
+      2 {
+        email = example@domain.tld
+      }
+    }
+
+    attachments = file
+  }
+}
+```
+
+
+## generateAuthCode
+
+Generate a unique hash for a database row inserted by [dbSave](#dbsave).
+
+| Setting       | Type                 | Description                                                                                                                                                                                                                                |
+|---------------|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| table         | string               | The table to take the data from.                                                                                                                                                                                                           |
+| uidField      | string               | Field to use as key field to search the data. Default: `uid`                                                                                                                                                                               |
+| uid           | string               | UID value to use.                                                                                                                                                                                                                          |
+| selectFields  | string               | List of fields to select. Default: `*`                                                                                                                                                                                                     |
+| authCodePage  | Page ID              | Page ID of where the hash validation takes place. Default: Current page                                                                                                                                                                    |
+| excludeParams | Comma separated list | List of parameters to exlude from generated URL to auth page. By default, `authCode`, `table`, `uidField` and `uid` are set. If you specify table, uidField and uid in the configuration of `validateAuthCode`, you can exclude them here. |
+
+If you want to use the data of a single record just inserted with `dbSave`, no further configuration is needed. Formhandler searches and uses this data automatically.
+
+Basic example:
+
+```text
+finishers {
+  10.class = generateAuthCode
+  10.config {
+
+  }
+}
+```
+
+Complex example:
+
+```text
+finishers {
+  10.class = generateAuthCode
+  10.config {
+    table = my_custom_table
+    uidField = id
+    uid = 1234
+    selectFields = field1,field2,field3
+  }
+}
+```
+
+## validateAuthCode
+
+Validate a hash generated by [generateAuthCode](#generateAuthCode).
+This component should be used as a `preProcessor` in combination with `loadGetPost`.
+
+If the validation is successful, the record is updated as specified.
+By default, a record having the `hiddenField` set to `hiddenStatusValue` is selected and updated with `activeStatusValue`.
+You can specify redirect pages or content to show after successful or failed validation.
+
+| Setting           | Type   | Description                                                                                                                                                                                                                                                                      |
+|-------------------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| table             | string | The table to take the data from. Default is the GET parameter `table`.                                                                                                                                                                                                           |
+| uidField          | string | Field to use as key field to search the data. Default is the GET parameter `uidField`.                                                                                                                                                                                           |
+| uid               | string | UID value to use. Default is the GET parameter `uid`.                                                                                                                                                                                                                            |
+| selectFields      | string | List of fields to select for hash generation. Should be the same as configured in `generateAuthCode`. Default: `*`                                                                                                                                                               |
+| hiddenField       | string | Name of the field indicating the hidden state. Default is the field set in TCA `['ctrl']['enablecolumns']['disabled']`                                                                                                                                                           |
+| hiddenStatusValue | string | Value indicating the hidden state. Default: `1`                                                                                                                                                                                                                                  |
+| success           | array  | In case of successful hash validation.<br><br>`redirectPage` - Page ID to redirect to.<br>`content` - Content to show (string or cObject).<br>`statusCode`- HTTP status code of the redirect. Default: 302<br>`additionalHeaders` - Additional headers for the redirect (Array). |
+| error             | array  | In case of failed hash validation.<br><br>`redirectPage` - Page ID to redirect to.<br>`content` - Content to show (string or cObject).<br>`statusCode`- HTTP status code of the redirect. Default: 302<br>`additionalHeaders` - Additional headers for the redirect (Array).     |
+
+
+Example:
+
+```text
+preProcessors {
+  # Use loadGetPost to load the query parameters from URL
+  10.class = loadGetPost
+  20.class = validateAuthCode
+  20.config {
+    success.redirectPage = 20
+    error.content = Hash invalid
+  }
+
+}
+
 ```

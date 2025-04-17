@@ -1,5 +1,6 @@
 # TYPO3 Formhandler
 
 <!-- TOC -->
-* [TYPO3 Formhandler](#typo3-formhandler)
+* [Settings](Settings.md)
+* [Components](Components.md)
 <!-- TOC -->
