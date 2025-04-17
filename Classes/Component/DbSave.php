@@ -167,12 +167,7 @@ class DbSave extends AbstractComponent
      */
     protected function getUpdateUid(): int
     {
-        $uid = $this->settings['key_value'];
-        $disableFallback = (intval($this->settings['disableUpdateUidFallback']) === 1);
-        if (!$disableFallback && !$uid) {
-            $uid = $this->gp[$this->key] ?? $this->gp['inserted_uid'];
-        }
-        return $uid;
+        return $this->settings['keyValue'] ?? $this->gp[$this->key] ?? 0;
     }
 
     /**
@@ -259,7 +254,7 @@ class DbSave extends AbstractComponent
 
                                 $count = 0;
                                 if (isset($files[$field]) && is_array($files[$field])) {
-                                    foreach ($files[$field] as $idx => $file) {
+                                    foreach ($files[$field] as $file) {
                                         $fileId = $file['falId'];
                                         if ($fileId) {
                                             $queryBuilder = GeneralUtility::makeInstance(
@@ -285,12 +280,12 @@ class DbSave extends AbstractComponent
 
                                 $files = $this->globals->getSession()->get('files');
                                 if (isset($files[$field]) && is_array($files[$field])) {
-                                    foreach ($files[$field] as $$file) {
+                                    foreach ($files[$field] as $file) {
                                         $infoString = $info;
                                         foreach ($file as $infoKey => $infoValue) {
                                             $infoString = str_replace('[' . $infoKey . ']', $infoValue, $infoString);
                                         }
-                                        array_push($filesArray, $infoString);
+                                        $filesArray[] = $infoString;
                                     }
                                 }
                                 if (isset($options['special']['index'])) {
@@ -303,22 +298,11 @@ class DbSave extends AbstractComponent
                                 }
                             }
                             break;
-                        case 'date':
-                            $field = $options['special']['field'] ?? '';
-                            if (isset($this->gp[$field])) {
-                                $date = $this->gp[$field];
-                                $dateFormat = $options['special']['dateFormat'] ?? $options['special']['format'] ?? 'Y-m-d';
-
-                                $fieldValue = $this->formUtility->dateToTimestamp($date, $dateFormat);
-                            } else {
-                                $fieldValue = time();
-                            }
-                            break;
                         case 'datetime':
                             $field = $options['special']['field'] ?? '';
                             if (isset($this->gp[$field])) {
                                 $date = $this->gp[$field];
-                                $dateFormat = $options['special']['dateFormat'] ?? $options['special']['format'] ?? 'Y-m-d H:i:s';
+                                $dateFormat = $options['special']['format'] ?? 'Y-m-d H:i:s';
 
                                 $fieldValue = $this->formUtility->dateToTimestamp($date, $dateFormat);
                             } else {
@@ -326,7 +310,7 @@ class DbSave extends AbstractComponent
                             }
                             break;
                         case 'sub_datetime':
-                            $dateFormat = $options['special']['dateFormat'] ?? $options['special']['format'] ?? 'Y-m-d H:i:s';
+                            $dateFormat = $options['special']['format'] ?? 'Y-m-d H:i:s';
                             $fieldValue = date($dateFormat, time());
                             break;
                         case 'sub_tstamp':
@@ -334,8 +318,12 @@ class DbSave extends AbstractComponent
                             break;
                         case 'ip':
                             $ip = $_SERVER['REMOTE_ADDR'];
-                            if ($_SERVER['HTTP_X_REAL_IP']) {
+
+                            if (isset($_SERVER['HTTP_X_REAL_IP'])) {
                                 $ip = $_SERVER['HTTP_X_REAL_IP'];
+                            }
+                            if (isset($options['special']['customProperty']) && isset($_SERVER[$options['special']['customProperty']])) {
+                                $ip = $_SERVER[$options['special']['customProperty']];
                             }
                             $fieldValue = $ip;
                             break;

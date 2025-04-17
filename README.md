@@ -2,7 +2,8 @@
 
 
 Basic configuration looks like this:
-```
+
+```text
 plugin.tx_formhandler {
 
   view {
@@ -42,7 +43,11 @@ plugin.tx_formhandler {
   }
 ```
 
-All configured forms are available in the plugin settings in a dropdown field.
+All configured forms are available in the plugin settings in a dropdown field. The setting **name** is used as a label.
+
+![Showing the forxform settings of plugin Formhandler. Predefined forms in TypoScript are selectable in a dropdown there.](./Documentation/Images/flexform.png "Flexform Settings")
+
+
 
 **view** and **settings** of each form are merged with the "global" TypoScript in **plugin.tx_formhandler**.
 This way you can define global settings like partialRootPaths and merge them with form specific settings.
@@ -89,5 +94,12 @@ The HTML-Template may look like this:
 
 That is all for a very simple and basic form.
 
-Have a look at the documentation for more details about available settings, components, error checks, view helpers and much more.
+Have a look at the documentation for more details about available
+
+* settings
+* [components](./Documentation/Components.md)
+* error checks
+* view helpers
+
+and much more.
 
