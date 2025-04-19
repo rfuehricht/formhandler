@@ -94,12 +94,13 @@ The HTML-Template may look like this:
 
 That is all for a very simple and basic form.
 
-Have a look at the documentation for more details about available
+Have a look at the [documentation](./Documentation/Index.md) for more details about available
 
-* settings
+* [settings](./Documentation/Settings.md)
 * [components](./Documentation/Components.md)
-* error checks
-* view helpers
+* [error checks](./Documentation/Validation.md)
+* [view helpers](./Documentation/ViewHelpers.md)
+* [templating](./Documentation/Templating.md)
 
 and much more.
 
