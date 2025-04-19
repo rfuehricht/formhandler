@@ -30,7 +30,7 @@ use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
  * #map a form field to a db field.
  * finishers.1.config.fields.header.mapping = name
  *
- * #if form field is empty, insert this
+ * # if form field is empty, insert configured content instead
  * finishers.1.config.fields.header.ifIsEmpty = None given
  * finishers.1.config.fields.bodytext.mapping = interests
  *
@@ -181,6 +181,7 @@ class DbSave extends AbstractComponent
 
         //parse mapping
         foreach ($this->settings['fields'] as $fieldName => $options) {
+            $fieldValue = '';
             if (isset($options) && is_array($options)) {
                 if (!isset($options['special'])) {
                     $mapping = $options['mapping'] ?? $fieldName;
