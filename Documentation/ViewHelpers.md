@@ -3,11 +3,39 @@
 Formhandler provides some view helpers to make templating easier.
 
 <!-- TOC -->
+* [form](#form)
 * [translate](#translate)
 * [fileRemoveButton](#fileremovebutton)
 * [get](#get)
   * [Available keys](#available-keys)
 <!-- TOC -->
+
+## form
+
+Formhandler requires a hidden field `randomId` to be set in every form.
+
+The `action` of the form should always be set to `form` to lead to the `formAction` in Formhandler.
+
+If you are having file upload fields in your form, make sure to set `enctype=multipart/form-data` to your form.
+
+For convenience, Formhandler offers a `form` view helper taking care of these setting.
+It extends the `form` view helper of TYPO3 and adds the additional information Formhandler needs.
+
+
+```html
+<html
+    data-namespace-typo3-fluid="true"
+    xmlns:f="http://typo3.org/ns/fluid/ViewHelpers"
+    xmlns:fh="http://typo3.org/ns/Rfuehricht/Formhandler/ViewHelpers">
+
+<fh:form>
+
+    <!-- ... -->
+
+</fh:form>
+
+</html>
+```
 
 ## translate
 

@@ -58,16 +58,26 @@ class FormUtility implements SingletonInterface
             return $value;
         } else {
             $value_length = strlen($value);
-            $qty = intval(substr($value, 0, $value_length - 1));
+
+            $qty = substr($value, 0, $value_length - 1);
             $unit = strtolower(substr($value, $value_length - 1));
+            if (!is_numeric($qty)) {
+                $qty = intval(substr($value, 0, $value_length - 2));
+                $unit = strtolower(substr($value, $value_length - 2));
+            }
+            $qty = intval($qty);
+
             switch ($unit) {
                 case 'k':
+                case 'kb':
                     $qty *= 1024;
                     break;
                 case 'm':
+                case 'mb':
                     $qty *= 1048576;
                     break;
                 case 'g':
+                case 'gb':
                     $qty *= 1073741824;
                     break;
             }

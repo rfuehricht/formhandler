@@ -24,6 +24,7 @@ class FileMaxSize extends AbstractErrorCheck
         if ($maxSize > $phpIniUploadMaxFileSize) {
             $this->formUtility->throwException('error_check_filemaxsize', GeneralUtility::formatSize($maxSize, ' Bytes| KB| MB| GB'), $fieldName, GeneralUtility::formatSize($phpIniUploadMaxFileSize, ' Bytes| KB| MB| GB'));
         }
+
         $files = $this->formUtility->getFilesArray();
         if (!is_array($files['name'][$fieldName])) {
             $files['name'][$fieldName] = [$files['name'][$fieldName]];
