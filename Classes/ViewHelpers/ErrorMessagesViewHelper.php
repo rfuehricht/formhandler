@@ -72,7 +72,7 @@ final class ErrorMessagesViewHelper extends AbstractViewHelper
         }
 
         if ($specificError) {
-            return reset($errorMessages);
+            $errorMessages = reset($errorMessages);
         }
 
         if ($errorMessages) {
