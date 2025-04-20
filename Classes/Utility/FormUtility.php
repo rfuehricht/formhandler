@@ -337,18 +337,24 @@ class FormUtility implements SingletonInterface
 
         if (is_array($sessionFiles) && isset($sessionFiles[$fieldName])) {
             if ($index !== null) {
-                unlink(
-                    $sessionFiles[$fieldName][$index]['uploaded_path'] .
-                    $sessionFiles[$fieldName][$index]['uploaded_name']
-                );
-                unset($sessionFiles[$fieldName][$index]);
+                $fullPath = $sessionFiles[$fieldName][$index]['uploaded_path'] .
+                    $sessionFiles[$fieldName][$index]['uploaded_name'];
+                if (file_exists($fullPath)) {
+                    unlink($fullPath);
+                }
+                if (isset($sessionFiles[$fieldName][$index])) {
+                    unset($sessionFiles[$fieldName][$index]);
+                }
             } else {
                 foreach ($sessionFiles[$fieldName] as $index => $file) {
-                    unlink(
-                        $file['uploaded_path'] .
-                        $file['uploaded_name']
-                    );
-                    unset($sessionFiles[$fieldName][$index]);
+                    $fullPath = $file['uploaded_path'] .
+                        $file['uploaded_name'];
+                    if (file_exists($fullPath)) {
+                        unlink($fullPath);
+                    }
+                    if (isset($sessionFiles[$fieldName][$index])) {
+                        unset($sessionFiles[$fieldName][$index]);
+                    }
                 }
             }
         }
