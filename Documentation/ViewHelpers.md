@@ -5,6 +5,7 @@ Formhandler provides some view helpers to make templating easier.
 <!-- TOC -->
 * [form](#form)
 * [translate](#translate)
+* [errorMessages](#errorMessages)
 * [fileRemoveButton](#fileremovebutton)
 * [get](#get)
   * [Available keys](#available-keys)
@@ -35,6 +36,63 @@ It extends the `form` view helper of TYPO3 and adds the additional information F
 </fh:form>
 
 </html>
+```
+
+## errorMessages
+
+Get error messages for a field to render them in a FLUID template.
+
+Arguments:
+
+| Argument | Type   | Description                                                                    |
+|----------|--------|--------------------------------------------------------------------------------|
+| field    | string | Field to get the error messages for.                                           |
+| as       | string | Optional name of the variable to store the messages in. Default: `errors`      |
+| error    | string | Optional name of a specific error to get the messages for. Default: all errors |
+
+Example:
+
+```html
+<html
+    data-namespace-typo3-fluid="true"
+    xmlns:fh="http://typo3.org/ns/Rfuehricht/Formhandler/ViewHelpers">
+
+<fh:errorMessages field="name">
+    <ul>
+        <f:for each="{errors}" as="message" >
+            <li>{message}</li>
+        </f:for>
+    </ul>
+</fh:errorMessages>
+
+</html>
+```
+
+`message` contains the translated message for the error occurred, if available.
+
+The message is searched in key `error_[fieldName]_[errorKey]`. Fallback is `error_default_[errorKey]`.
+If no message is found, the error key is returned, e.g. `required`.
+
+Example:
+
+```xml
+<trans-unit id="error_default_required">
+    <source>{fieldName} is required</source>
+</trans-unit>
+<trans-unit id="error_file_fileMaxSize">
+    <source>{fieldName} max size is {maxSize}</source>
+</trans-unit>
+```
+
+You can use FLUID style variable syntax in the error messages. `fieldName` is replaced with the name of the form field triggering the error, all other variables are the names of the options of the error check.
+Additionally, you can use `{LLL:[key]}` to get translated content from inside the translation message.
+
+Example:
+
+```xml
+<trans-unit id="error_default_required">
+    <source>{LLL:label_{fieldName}} is required!</source>
+</trans-unit>
 ```
 
 ## translate

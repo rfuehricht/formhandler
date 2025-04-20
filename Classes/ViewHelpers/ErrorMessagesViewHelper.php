@@ -4,11 +4,18 @@ namespace Rfuehricht\Formhandler\ViewHelpers;
 
 use Rfuehricht\Formhandler\Utility\FormUtility;
 use Rfuehricht\Formhandler\Utility\Globals;
-use TYPO3\CMS\Core\Utility\DebugUtility;
+use TYPO3Fluid\Fluid\Core\Variables\ScopedVariableProvider;
+use TYPO3Fluid\Fluid\Core\Variables\StandardVariableProvider;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 final class ErrorMessagesViewHelper extends AbstractViewHelper
 {
+
+    /**
+     * @var bool
+     */
+    protected $escapeOutput = false;
+
 
     public function __construct(
         private readonly FormUtility $formUtility,
@@ -53,8 +60,12 @@ final class ErrorMessagesViewHelper extends AbstractViewHelper
             }
             $value = str_ireplace('{fieldName}', $field, $value);
 
-            preg_replace_callback('/{LLL:([^}]+)}/', function ($match) {
-                DebugUtility::debug($match);
+            $value = preg_replace_callback('/{LLL:([^}]+)}/', function ($match) {
+                $langKey = $match[1] ?? '';
+                if ($langKey) {
+                    return $this->formUtility->translate($langKey);
+                }
+                return '';
             }, $value);
 
             $errorMessages[] = $value;
@@ -64,8 +75,15 @@ final class ErrorMessagesViewHelper extends AbstractViewHelper
             return reset($errorMessages);
         }
 
-        return $errorMessages;
-
+        if ($errorMessages) {
+            $variableProvider = new ScopedVariableProvider($this->renderingContext->getVariableProvider(), new StandardVariableProvider([$this->arguments['as'] => $errorMessages]));
+            $this->renderingContext->setVariableProvider($variableProvider);
+            $output = (string)$this->renderChildren();
+            $this->renderingContext->setVariableProvider($variableProvider->getGlobalVariableProvider());
+        } else {
+            $output = '';
+        }
+        return $output;
     }
 
     public function initializeArguments(): void
@@ -75,6 +93,12 @@ final class ErrorMessagesViewHelper extends AbstractViewHelper
             'string',
             'The field to get the message for.',
             true
+        );
+        $this->registerArgument(
+            'as',
+            'string',
+            'The variable name for the errors.',
+            defaultValue: 'errors'
         );
         $this->registerArgument(
             'error',

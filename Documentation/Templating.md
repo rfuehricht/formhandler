@@ -63,7 +63,9 @@ These variables are available in the template.
 
 ### Show errors for a field
 
-Loop available data in `errors` to show error messages for a field.
+The best way is to use the view helper [errorMessages](./ViewHelpers.md).
+
+If you want to handle it yourself, loop available data in `errors` to show error messages for a field.
 
 ```html
 <f:if condition="{errors.name}">
@@ -92,6 +94,15 @@ Example:
 ```
 
 You can use FLUID style variable syntax in the error messages. `fieldName` is replaced with the name of the form field triggering the error, all other variables are the names of the options of the error check.
+Additionally, you can use `{LLL:[key]}` to get translated content from inside the translation message.
+
+Example:
+
+```xml
+<trans-unit id="error_default_required">
+    <source>{LLL:label_{fieldName}} is required!</source>
+</trans-unit>
+```
 
 ### File upload fields
 
