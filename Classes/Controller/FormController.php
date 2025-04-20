@@ -11,7 +11,6 @@ use Rfuehricht\Formhandler\Validator\AbstractValidator;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\NullResponse;
-use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -38,12 +37,6 @@ class FormController extends ActionController
     {
 
         $this->checkPredefinedFormToUse();
-
-        GeneralUtility::makeInstance(AssetCollector::class)
-            ->addJavaScript(
-                'formhandler',
-                'EXT:formhandler/Resources/Public/JavaScript/init.js'
-            );
 
         $originalSettings = $this->settings;
         $this->gp = $this->request->getParsedBody()['tx_formhandler_form'] ?? [];
@@ -83,6 +76,15 @@ class FormController extends ActionController
 
 
         $errors = [];
+
+        if (str_starts_with($wantedStepOrAction, 'remove-')) {
+            $parts = explode('-', $wantedStepOrAction);
+            $fieldName = htmlspecialchars($parts[1]);
+            $index = intval($parts[2]);
+            if ($fieldName) {
+                $this->formUtility->removeFile($fieldName, $index);
+            }
+        }
 
         switch ($wantedStepOrAction) {
             case '':

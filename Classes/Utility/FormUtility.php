@@ -323,4 +323,36 @@ class FormUtility implements SingletonInterface
         return $hashService->hmac(serialize($row), 'formhandler');
     }
 
+    /**
+     * Removes file with given index from uploaded files for given field.
+     * If no index is given, all files of this field are removed.
+     *
+     * @param string $fieldName
+     * @param int|null $index
+     * @return void
+     */
+    public function removeFile(string $fieldName, ?int $index): void
+    {
+        $sessionFiles = $this->globals->getSession()->get('files');
+
+        if (is_array($sessionFiles) && isset($sessionFiles[$fieldName])) {
+            if ($index !== null) {
+                unlink(
+                    $sessionFiles[$fieldName][$index]['uploaded_path'] .
+                    $sessionFiles[$fieldName][$index]['uploaded_name']
+                );
+                unset($sessionFiles[$fieldName][$index]);
+            } else {
+                foreach ($sessionFiles[$fieldName] as $index => $file) {
+                    unlink(
+                        $file['uploaded_path'] .
+                        $file['uploaded_name']
+                    );
+                    unset($sessionFiles[$fieldName][$index]);
+                }
+            }
+        }
+
+        $this->globals->getSession()->set('files', $sessionFiles);
+    }
 }

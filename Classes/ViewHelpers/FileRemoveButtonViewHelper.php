@@ -2,39 +2,63 @@
 
 namespace Rfuehricht\Formhandler\ViewHelpers;
 
-use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
+use Rfuehricht\Formhandler\Utility\Globals;
+use TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormFieldViewHelper;
 
-final class FileRemoveButtonViewHelper extends AbstractViewHelper
+final class FileRemoveButtonViewHelper extends AbstractFormFieldViewHelper
 {
+    /**
+     * @var string
+     */
+    protected $tagName = 'input';
 
-    protected $escapeOutput = false;
+    private Globals $globals;
 
-    protected $escapeChildren = false;
+    public function injectGlobals(Globals $globals): void
+    {
+        $this->globals = $globals;
+    }
 
     public function render(): string
     {
-        $fileInfo = $this->arguments['file'];
-        $textContent = trim($this->arguments['value'] ?? $this->renderChildren());
-        return '<button
-                    data-formhandler-action="remove"
-                    data-field="' . $fileInfo['field'] . '"
-                    data-index="' . $fileInfo['index'] . '">' . $textContent . '
-                 </button>';
+        $name = $this->getName();
+        $this->registerFieldNameForFormTokenGeneration($name);
 
+        $this->tag->addAttribute('type', 'submit');
+        $this->tag->addAttribute('value', $this->getValueAttribute());
+        $this->tag->addAttribute('name', $name);
+
+        return $this->tag->render();
+    }
+
+    protected function getName(): string
+    {
+        $name = 'submit-remove-' . $this->arguments['field'];
+        if (isset($this->arguments['index'])) {
+            $name .= '-' . $this->arguments['index'];
+        }
+        if ($this->globals->getFormValuesPrefix()) {
+            $name = $this->globals->getFormValuesPrefix() . '[' . $name . ']';
+        }
+        return $this->prefixFieldName($name);
     }
 
     public function initializeArguments(): void
     {
+        parent::initializeArguments();
+        unset($this->argumentDefinitions['name']);
         $this->registerArgument(
-            'file',
-            'array',
-            'Formhandler file info',
+            'field',
+            'string',
+            'The name of the upload field',
             true
         );
         $this->registerArgument(
-            'value',
-            'string',
-            'Text content of the button'
+            'index',
+            'integer',
+            'The index of the file to remove'
         );
     }
+
+
 }

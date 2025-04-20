@@ -128,10 +128,11 @@ Renders a button to remove an uploaded file.
 
 Arguments:
 
-| Argument | Type   | Description                                                                 |
-|----------|--------|-----------------------------------------------------------------------------|
-| file     | object | The file to remove                                                          |
-| value    | string | Value of the button. Either as argument or text content of the view helper. |
+| Argument | Type   | Description                                                                                |
+|----------|--------|--------------------------------------------------------------------------------------------|
+| field    | string | The name of the upload field.                                                              |
+| index    | int    | The index of the file to remove. If not set, all uploaded files of this field are removed. |
+| value    | string | Value of the button.                                                                       |
 
 
 Example:
@@ -145,7 +146,7 @@ Example:
     <ul>
         <f:for as="file" each="{files.file}" key="index">
             <li>{file.name} ({file.size -> f:format.bytes()})
-                <fh:fileRemoveButton file="{file}">X</fh:fileRemoveButton>
+                <fh:fileRemoveButton field="file" index="{index}" value="X" />
             </li>
         </f:for>
     </ul>
