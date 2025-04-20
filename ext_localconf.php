@@ -1,6 +1,5 @@
 <?php
 
-use Rfuehricht\Formhandler\Ajax\RemoveFile;
 use Rfuehricht\Formhandler\Controller\FormController;
 use TYPO3\CMS\Core\Imaging\IconProvider\BitmapIconProvider;
 use TYPO3\CMS\Core\Imaging\IconRegistry;
@@ -24,5 +23,3 @@ $iconRegistry->registerIcon(
     BitmapIconProvider::class,
     ['source' => 'EXT:formhandler/ext_icon.svg']
 );
-
-$GLOBALS['TYPO3_CONF_VARS']['FE']['eID_include']['formhandler-remove-file'] = RemoveFile::class . '::process';
