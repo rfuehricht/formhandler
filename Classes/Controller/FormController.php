@@ -5,6 +5,7 @@ namespace Rfuehricht\Formhandler\Controller;
 use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Rfuehricht\Formhandler\Component\AbstractComponent;
+use Rfuehricht\Formhandler\Event\BeforeViewEvent;
 use Rfuehricht\Formhandler\Utility\FormUtility;
 use Rfuehricht\Formhandler\Utility\Globals;
 use Rfuehricht\Formhandler\Validator\AbstractValidator;
@@ -196,11 +197,15 @@ class FormController extends ActionController
             $this->view->assign('validations', $validations);
             $this->globals->setValidations($validations);
         }
+        $event = GeneralUtility::makeInstance(BeforeViewEvent::class, $this->request);
+        $this->eventDispatcher->dispatch($event);
+
         if ($skipView) {
             return new NullResponse();
         }
         return $this->htmlResponse($this->view->render($templateFile));
     }
+
 
     /**
      * Updates settings and view if "useForm" is set or predefined form is selected in FlexForm
