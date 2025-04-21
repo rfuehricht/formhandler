@@ -197,7 +197,9 @@ class FormController extends ActionController
             $this->view->assign('validations', $validations);
             $this->globals->setValidations($validations);
         }
-        $event = GeneralUtility::makeInstance(BeforeViewEvent::class, $this->request);
+        /** @var BeforeViewEvent $event */
+        $event = GeneralUtility::makeInstance(BeforeViewEvent::class);
+        $event->setRequest($this->request);
         $this->eventDispatcher->dispatch($event);
 
         if ($skipView) {
@@ -456,9 +458,10 @@ class FormController extends ActionController
                                     $tempFiles[$field] = [];
                                 }
                                 if (!$exists || $uploadedFilesWithSameNameAction !== 'replace') {
+                                    $tmp['field'] = $field;
+                                    $tmp['fileHash'] = sha1($tmp['name'] . $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
                                     $tempFiles[$field][] = $tmp;
-                                    foreach ($tempFiles[$field] as $fileIndex => &$tempFile) {
-                                        $tempFile['index'] = $fileIndex;
+                                    foreach ($tempFiles[$field] as &$tempFile) {
                                         $tempFile['field'] = $field;
                                     }
                                 }

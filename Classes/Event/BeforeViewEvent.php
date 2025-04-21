@@ -11,16 +11,20 @@ use TYPO3\CMS\Extbase\Mvc\Request;
  *
  * Listeners may update view related stuff.
  */
-final readonly class BeforeViewEvent
+final class BeforeViewEvent
 {
-    public function __construct(private Request $request)
-    {
-    }
+
+    private Request $request;
+    
 
     public function getRequest(): Request
     {
         return $this->request;
     }
 
+    public function setRequest(Request $request): void
+    {
+        $this->request = $request;
+    }
 
 }
