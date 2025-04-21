@@ -26,6 +26,9 @@ class FileMaxSize extends AbstractErrorCheck
         }
 
         $files = $this->formUtility->getFilesArray();
+        if (!isset($files['name'][$fieldName])) {
+            return '';
+        }
         if (!is_array($files['name'][$fieldName])) {
             $files['name'][$fieldName] = [$files['name'][$fieldName]];
         }

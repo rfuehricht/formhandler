@@ -11,12 +11,10 @@ use Rfuehricht\Formhandler\Validator\AbstractValidator;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\NullResponse;
-use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
-use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 
 class FormController extends ActionController
@@ -165,25 +163,14 @@ class FormController extends ActionController
             'errors' => $errors
         ]);
 
-        $inlineSettings = [];
-        if (isset($this->settings['clientSideValidation']) && boolval($this->settings['clientSideValidation']) === true) {
-            $inlineSettings['clientSideValidation'] = true;
-        }
-        if (isset($this->settings['ajaxSubmit']) && boolval($this->settings['ajaxSubmit']) === true) {
-            $inlineSettings['ajaxSubmit'] = true;
-        }
-        $inlineSettings['formValuesPrefix'] = $this->globals->getFormValuesPrefix();
-
+        $validations = [];
         if (isset($this->settings['validators'])) {
             foreach ($this->settings['validators'] as $validator) {
                 if (isset($validator['config']['fieldConf'])) {
                     foreach ($validator['config']['fieldConf'] as $fieldName => $fieldConf) {
                         if (isset($fieldConf['errorCheck'])) {
-                            if (!isset($inlineSettings['validations'])) {
-                                $inlineSettings['validations'] = [];
-                            }
-                            if (!isset($inlineSettings['validations'][$fieldName])) {
-                                $inlineSettings['validations'][$fieldName] = [];
+                            if (!isset($validations[$fieldName])) {
+                                $validations[$fieldName] = [];
                             }
                             foreach ($fieldConf['errorCheck'] as $errorCheck) {
                                 $errorCheckName = $errorCheck;
@@ -191,7 +178,7 @@ class FormController extends ActionController
                                     $errorCheckName = $errorCheck['_typoScriptNodeValue'];
                                     unset($errorCheck['_typoScriptNodeValue']);
                                 }
-                                $inlineSettings['validations'][$fieldName][] = [
+                                $validations[$fieldName][] = [
                                     'check' => $errorCheckName,
                                     'options' => is_array($errorCheck) ? $errorCheck : []
                                 ];
@@ -204,17 +191,10 @@ class FormController extends ActionController
             }
         }
 
-        if (!empty($inlineSettings)) {
+        if (!empty($validations)) {
 
-            $this->view->assign('validations', $inlineSettings['validations']);
-            $this->globals->setValidations($inlineSettings['validations'] ?? []);
-
-            /** @var ContentObjectRenderer $contentObjectRenderer */
-            $contentObjectRenderer = $this->request->getAttribute('currentContentObject');
-            $inlineSettings[$contentObjectRenderer->data['uid']] = $inlineSettings;
-            /** @var PageRenderer $pageRenderer */
-            $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-            $pageRenderer->addInlineSettingArray('formhandler', $inlineSettings);
+            $this->view->assign('validations', $validations);
+            $this->globals->setValidations($validations);
         }
         if ($skipView) {
             return new NullResponse();
@@ -410,7 +390,7 @@ class FormController extends ActionController
 
                     foreach ($uploadedFiles as $idx => $name) {
                         $exists = false;
-                        if (is_array($sessionFiles[$field])) {
+                        if (isset($sessionFiles[$field]) && is_array($sessionFiles[$field])) {
                             foreach ($sessionFiles[$field] as $fileOptions) {
                                 if ($fileOptions['name'] === $name) {
                                     $exists = true;
