@@ -4,10 +4,10 @@ namespace Rfuehricht\Formhandler\ViewHelpers;
 
 use Rfuehricht\Formhandler\Utility\Globals;
 
-final class FormViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\FormViewHelper
+class FormViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\FormViewHelper
 {
 
-    private Globals $globals;
+    protected Globals $globals;
 
     public function injectGlobals(Globals $globals): void
     {
@@ -32,6 +32,7 @@ final class FormViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\FormViewHelper
                 }
             }
         }
+        $this->tag->addAttribute('id', 'form-' . $this->globals->getRandomId());
         return parent::render();
     }
 
