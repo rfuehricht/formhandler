@@ -68,11 +68,6 @@ class FormController extends ActionController
 
         $this->updateSettings($currentStep);
 
-        $result = $this->runClasses($this->settings['interceptors'] ?? []);
-        if ($result) {
-            return $result;
-        }
-
 
         $errors = [];
 
@@ -138,6 +133,11 @@ class FormController extends ActionController
 
         $this->globals->getSession()->set('lastStep', $lastStep);
         $this->globals->getSession()->set('currentStep', $currentStep);
+
+        $result = $this->runClasses($this->settings['interceptors'] ?? []);
+        if ($result) {
+            return $result;
+        }
 
         $skipView = $this->settings['skipView'] ?? false;
         if (!$templateFile || $skipView) {
