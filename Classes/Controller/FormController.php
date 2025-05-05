@@ -139,6 +139,8 @@ class FormController extends ActionController
             return $result;
         }
 
+        $this->globals->setValues($this->gp);
+
         $skipView = $this->settings['skipView'] ?? false;
         if (!$templateFile || $skipView) {
 
@@ -147,6 +149,8 @@ class FormController extends ActionController
                 return $result;
             }
         }
+
+        $this->globals->setValues($this->gp);
 
         $this->globals->setErrors($errors);
 
