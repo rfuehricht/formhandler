@@ -115,11 +115,11 @@ class FormController extends ActionController
                         $currentStep = 1;
                     }
                     $this->settings = $originalSettings;
-                    $this->updateSettings($currentStep);
+
                 }
                 break;
         }
-
+        $this->updateSettings($currentStep);
 
         $this->mergeGPWithSession();
         $this->globals->setValues($this->gp);
