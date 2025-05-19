@@ -189,8 +189,10 @@ class DbSave extends AbstractComponent
                         /** @var ContentObjectRenderer $contentObjectRenderer */
                         $contentObjectRenderer = $this->request->getAttribute('currentContentObject');
                         $mapping = $contentObjectRenderer->cObjGetSingle($mapping['_typoScriptNodeValue'], $mapping);
+                        $fieldValue = $this->gp[$mapping] ?? $mapping;
+                    } else {
+                        $fieldValue = $this->gp[$mapping] ?? '';
                     }
-                    $fieldValue = $this->gp[$mapping] ?? '';
 
 
                     //preprocess the field value. e.g. to format a date
