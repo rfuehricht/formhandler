@@ -10,7 +10,7 @@ $EM_CONF['formhandler'] = [
     'author_email' => 'r.fuehricht@gmail.com',
     'constraints' => [
         'depends' => [
-            'typo3' => '13.0.0-13.99.99'
+            'typo3' => '12.0.0-13.99.99'
         ],
         'conflicts' => [
         ],
