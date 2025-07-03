@@ -1,7 +1,6 @@
 mod.wizards.newContentElement.wizardItems.forms {
     elements {
         formhandler_form {
-            iconIdentifier = formhandler-icon
             title = Formhandler
             description = Form
             tt_content_defValues {

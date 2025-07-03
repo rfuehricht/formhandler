@@ -8,8 +8,7 @@ defined('TYPO3') or die();
 $pluginSignature = ExtensionUtility::registerPlugin(
     'Formhandler',
     'Form',
-    'Formhandler',
-    'EXT:formhandler/ext_icon.svg'
+    'Formhandler'
 );
 
 
