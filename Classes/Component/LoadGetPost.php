@@ -15,7 +15,7 @@ class LoadGetPost extends AbstractComponent
     public function process(): array|ResponseInterface
     {
         $loadedGP = $this->loadGP();
-        $this->gp = array_merge($loadedGP, $this->gp);
+        $this->gp = array_merge($loadedGP, $this->gp ?? []);
         return $this->gp;
     }
 
@@ -26,7 +26,7 @@ class LoadGetPost extends AbstractComponent
      */
     protected function loadGP(): array
     {
-        $gp = array_merge($this->request->getQueryParams(), $this->request->getParsedBody());
+        $gp = array_merge($this->request->getQueryParams(), $this->request->getParsedBody()) ?? [];
         $formValuesPrefix = $this->globals->getFormValuesPrefix();
         if ($formValuesPrefix) {
             $gp = $gp[$formValuesPrefix] ?? [];
