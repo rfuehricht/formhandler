@@ -32,7 +32,6 @@ class TypoScriptConditionFunctionsProvider implements ExpressionFunctionProvider
             'formhandlerValues',
             static fn() => null, // Not implemented, we only use the evaluator
             static function (array $arguments, string $formValuesPrefix = '') {
-
                 /** @var Globals $globals */
                 $globals = GeneralUtility::makeInstance(Globals::class);
                 $values = $arguments['request']->getParsedBody() ?? [];
@@ -43,8 +42,7 @@ class TypoScriptConditionFunctionsProvider implements ExpressionFunctionProvider
                 $globals->setRandomId($values['randomId'] ?? '');
                 $globals->setFormValuesPrefix($formValuesPrefix);
 
-                return array_merge($globals->getSession()->get('values') ?? [], $values);
-
+                return $values;
             }
         );
     }

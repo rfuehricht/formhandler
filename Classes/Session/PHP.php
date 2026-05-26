@@ -21,16 +21,9 @@ class PHP extends AbstractSession
 
     public function start(): void
     {
+        session_start();
         if (!isset($_SESSION['formhandler'])) {
             $_SESSION['formhandler'] = [];
-        }
-        if (!$this->started) {
-            $current_session_id = session_id();
-            if (empty($current_session_id)) {
-                session_start();
-            }
-            $this->started = time();
-
         }
     }
 
