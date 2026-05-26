@@ -26,21 +26,19 @@ class FormController extends ActionController
 
     public function __construct(
         protected readonly FormUtility $formUtility,
-        protected readonly Globals     $globals
-    )
-    {
-
+        protected readonly Globals $globals
+    ) {
     }
 
     public function formAction(): ResponseInterface
     {
-
         $this->checkPredefinedFormToUse();
 
         $originalSettings = $this->settings;
         $this->gp = $this->request->getParsedBody()['tx_formhandler_form'] ?? [];
         if (isset($this->settings['formValuesPrefix'])) {
-            $this->gp = $this->request->getParsedBody()['tx_formhandler_form'][$this->settings['formValuesPrefix']] ?? [];
+            $this->gp = $this->request->getParsedBody(
+            )['tx_formhandler_form'][$this->settings['formValuesPrefix']] ?? [];
         }
         $this->globals->setRandomId($this->gp['randomId'] ?? $this->formUtility->generateRandomId());
         $this->globals->setView($this->view);
@@ -51,7 +49,9 @@ class FormController extends ActionController
         $currentStep = $this->globals->getSession()->get('currentStep') ?? 1;
         $lastStep = $this->globals->getSession()->get('lastStep') ?? 0;
 
-        if ($this->globals->getSession()->get('finished') || intval($wantedStepOrAction) < $currentStep - 1 || intval($wantedStepOrAction) > $currentStep + 1) {
+        if ($this->globals->getSession()->get('finished') || intval($wantedStepOrAction) < $currentStep - 1 || intval(
+                $wantedStepOrAction
+            ) > $currentStep + 1) {
             $this->gp = [];
             $this->globals->getSession()->reset();
             $currentStep = $lastStep = 1;
@@ -88,7 +88,6 @@ class FormController extends ActionController
             default:
                 $wantedStep = intval($wantedStepOrAction);
                 if ($wantedStep === $currentStep + 1) {
-
                     //Run validations
                     $errors = $this->runValidations();
 
@@ -99,7 +98,6 @@ class FormController extends ActionController
                         $this->processFiles();
                     }
                 } elseif ($wantedStep === $currentStep || $wantedStep === $currentStep - 1) {
-
                     //Submit reload action for uploading files
                     if ($wantedStep === $currentStep) {
                         //Run validations
@@ -115,7 +113,6 @@ class FormController extends ActionController
                         $currentStep = 1;
                     }
                     $this->settings = $originalSettings;
-
                 }
                 break;
         }
@@ -143,7 +140,6 @@ class FormController extends ActionController
 
         $skipView = $this->settings['skipView'] ?? false;
         if (!$templateFile || $skipView) {
-
             $result = $this->runClasses($this->settings['finishers'] ?? []);
             if ($result) {
                 return $result;
@@ -189,15 +185,12 @@ class FormController extends ActionController
                                 ];
                             }
                         }
-
-
                     }
                 }
             }
         }
 
         if (!empty($validations)) {
-
             $this->view->assign('validations', $validations);
             $this->globals->setValidations($validations);
         }
@@ -222,11 +215,11 @@ class FormController extends ActionController
     {
         $configuration = $this->configurationManager->getConfiguration(
             ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK,
-            'formhandler');
+            'formhandler'
+        );
 
         $useForm = $configuration['useForm'] ?? $this->settings['useForm'] ?? false;
         if ($useForm && isset($configuration['forms'][$useForm])) {
-
             $this->settings = $configuration['forms'][$useForm]['settings'] ?? [];
 
             /** @var RenderingContextInterface $renderingContext */
@@ -285,6 +278,7 @@ class FormController extends ActionController
                         return $result;
                     }
                     $this->gp = $result;
+                    $this->globals->setValues($this->gp);
                 }
             }
         } catch (Exception $e) {
@@ -314,7 +308,8 @@ class FormController extends ActionController
     {
         if (isset($this->settings[$currentStep])) {
             ArrayUtility::mergeRecursiveWithOverrule(
-                $this->settings, $this->settings[$currentStep] ?? []
+                $this->settings,
+                $this->settings[$currentStep] ?? []
             );
             $this->globals->setSettings($this->settings);
         }
@@ -331,7 +326,6 @@ class FormController extends ActionController
         $errors = [];
         if (isset($this->settings['validators']) &&
             is_array($this->settings['validators'])) {
-
             foreach ($this->settings['validators'] as $tsConfig) {
                 if ($isValid) {
                     $className = $this->formUtility->prepareClassName($tsConfig['class'] ?? 'Default');
@@ -341,11 +335,9 @@ class FormController extends ActionController
                         $validator = GeneralUtility::makeInstance($className);
                         $validator->init($this->gp, $tsConfig['config'] ?? [], $this->request);
                         $isValid = $validator->validate($errors, $fileChecksOnly);
-
                     }
                 }
             }
-
         }
         return $errors;
     }
@@ -386,11 +378,8 @@ class FormController extends ActionController
 
             //if a file was uploaded
             if (isset($files['name']) && is_array($files['name'])) {
-
                 //for all file names
                 foreach ($files['name'] as $field => $uploadedFiles) {
-
-
                     //If only a single file is uploaded
                     if (!is_array($uploadedFiles)) {
                         $uploadedFiles = [$uploadedFiles];
@@ -463,7 +452,9 @@ class FormController extends ActionController
                                 }
                                 if (!$exists || $uploadedFilesWithSameNameAction !== 'replace') {
                                     $tmp['field'] = $field;
-                                    $tmp['fileHash'] = sha1($tmp['name'] . $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
+                                    $tmp['fileHash'] = sha1(
+                                        $tmp['name'] . $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']
+                                    );
                                     $tempFiles[$field][] = $tmp;
                                     foreach ($tempFiles[$field] as &$tempFile) {
                                         $tempFile['field'] = $field;

@@ -26,7 +26,6 @@ class DefaultValidator extends AbstractValidator
      */
     public function validate(array &$errors, bool $fileChecksOnly = false): bool
     {
-
         //no config? validation returns TRUE
         if (!is_array($this->settings['fieldConf'])) {
             return true;
@@ -117,18 +116,21 @@ class DefaultValidator extends AbstractValidator
      * @param string|null $rootField
      * @return array The error array
      */
-    protected function validateRecursive(array $errors, array $gp, array $fieldConf, string $rootField = null): array
+    protected function validateRecursive(array $errors, array $gp, array $fieldConf, ?string $rootField = null): array
     {
-
         //foreach configured form field
         foreach ($fieldConf as $fieldName => $fieldSettings) {
-
             $errorFieldName = ($rootField === null) ? $fieldName : $rootField;
 
             $tempSettings = $fieldSettings;
             if (is_array($tempSettings) && !isset($tempSettings['_typoScriptNodeValue'])) {
                 // Nested field-configurations - do recursion:
-                $errors = $this->validateRecursive($errors, (array)($gp[$fieldName] ?? []), $tempSettings, $errorFieldName);
+                $errors = $this->validateRecursive(
+                    $errors,
+                    (array)($gp[$fieldName] ?? []),
+                    $tempSettings,
+                    $errorFieldName
+                );
             }
 
             if (!isset($fieldSettings['errorCheck']) || !is_array($fieldSettings['errorCheck'])) {
@@ -161,7 +163,6 @@ class DefaultValidator extends AbstractValidator
 
             //foreach error checks
             foreach ($errorChecks as $check) {
-
                 if ($this->fileChecksOnly && !str_starts_with($check['check'], 'file')) {
                     continue;
                 }
@@ -174,12 +175,15 @@ class DefaultValidator extends AbstractValidator
                         empty($this->disableErrorCheckFields[$errorFieldName])
                     )
                 ) {
-
                     continue;
                 }
                 $classNameFix = ucfirst($check['check']);
                 if (!str_contains($classNameFix, '\\')) {
-                    $errorCheckObject = GeneralUtility::makeInstance($this->formUtility->prepareClassName('\\Rfuehricht\\Formhandler\\Validator\\ErrorCheck\\' . $classNameFix));
+                    $errorCheckObject = GeneralUtility::makeInstance(
+                        $this->formUtility->prepareClassName(
+                            '\\Rfuehricht\\Formhandler\\Validator\\ErrorCheck\\' . $classNameFix
+                        )
+                    );
                 } else {
                     //Look for the whole error check name, maybe it is a custom check
                     $errorCheckObject = GeneralUtility::makeInstance($check['check']);
@@ -187,7 +191,6 @@ class DefaultValidator extends AbstractValidator
 
                 /** @var AbstractErrorCheck $errorCheckObject */
                 if (empty($this->restrictErrorChecks) || in_array($check['check'], $this->restrictErrorChecks)) {
-
                     $checkFailed = $errorCheckObject->check($fieldName, $gp, $check['params'] ?? []);
                     if (is_array($checkFailed)) {
                         foreach ($checkFailed as $field => $failedCheck) {
@@ -197,12 +200,14 @@ class DefaultValidator extends AbstractValidator
                             }
                             $errors[$field][] = $failedCheck;
                         }
-                    } else if (strlen($checkFailed) > 0) {
-                        $errors[$errorFieldName] = $errors[$errorFieldName] ?? [];
-                        if (!is_array($errors[$errorFieldName])) {
-                            $errors[$errorFieldName] = [];
+                    } else {
+                        if (strlen($checkFailed) > 0) {
+                            $errors[$errorFieldName] = $errors[$errorFieldName] ?? [];
+                            if (!is_array($errors[$errorFieldName])) {
+                                $errors[$errorFieldName] = [];
+                            }
+                            $errors[$errorFieldName][] = $checkFailed;
                         }
-                        $errors[$errorFieldName][] = $checkFailed;
                     }
                 }
             }
