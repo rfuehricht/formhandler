@@ -326,6 +326,7 @@ class FormController extends ActionController
         $errors = [];
         if (isset($this->settings['validators']) &&
             is_array($this->settings['validators'])) {
+            ksort($this->settings['validators'], SORT_NUMERIC);
             foreach ($this->settings['validators'] as $tsConfig) {
                 if ($isValid) {
                     $className = $this->formUtility->prepareClassName($tsConfig['class'] ?? 'Default');
