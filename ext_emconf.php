@@ -4,13 +4,13 @@ $EM_CONF['formhandler'] = [
     'title' => 'Formhandler',
     'description' => 'The swiss army knife for all kinds of mail forms.',
     'category' => 'frontend',
-    'version' => '13.0.6',
+    'version' => '14.0.0',
     'state' => 'stable',
     'author' => 'Reinhard Führicht',
     'author_email' => 'r.fuehricht@gmail.com',
     'constraints' => [
         'depends' => [
-            'typo3' => '12.0.0-13.99.99'
+            'typo3' => '12.0.0-14.99.99'
         ],
         'conflicts' => [
         ],
