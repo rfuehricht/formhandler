@@ -126,6 +126,8 @@ class FormController extends ActionController
 
         if (isset($this->settings[$currentStep]['templateFile'])) {
             $templateFile = $this->settings[$currentStep]['templateFile'];
+        } elseif ($this->settings['templateFile']) {
+            $templateFile = $this->settings['templateFile'];
         }
 
         $this->globals->getSession()->set('lastStep', $lastStep);
