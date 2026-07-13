@@ -258,6 +258,9 @@ class FormUtility implements SingletonInterface
         if (!is_array($languageFiles) && strlen(trim($languageFiles)) > 0) {
             $languageFiles = [$languageFiles];
         }
+
+        // Reverse sort language files to allow correct overriding of language keys.
+        krsort($languageFiles);
         $value = '';
         foreach ($languageFiles as $languageFile) {
             if ($value === '' || $value === null) {
