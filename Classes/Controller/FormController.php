@@ -37,8 +37,7 @@ class FormController extends ActionController
         $originalSettings = $this->settings;
         $this->gp = $this->request->getParsedBody()['tx_formhandler_form'] ?? [];
         if (isset($this->settings['formValuesPrefix'])) {
-            $this->gp = $this->request->getParsedBody(
-            )['tx_formhandler_form'][$this->settings['formValuesPrefix']] ?? [];
+            $this->gp = $this->request->getParsedBody()['tx_formhandler_form'][$this->settings['formValuesPrefix']] ?? [];
         }
         $this->globals->setRandomId($this->gp['randomId'] ?? $this->formUtility->generateRandomId());
         $this->globals->setView($this->view);
@@ -126,7 +125,7 @@ class FormController extends ActionController
 
         if (isset($this->settings[$currentStep]['templateFile'])) {
             $templateFile = $this->settings[$currentStep]['templateFile'];
-        } elseif ($this->settings['templateFile']) {
+        } elseif (isset($this->settings['templateFile'])) {
             $templateFile = $this->settings['templateFile'];
         }
 
