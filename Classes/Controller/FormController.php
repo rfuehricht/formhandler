@@ -125,7 +125,7 @@ class FormController extends ActionController
 
         if (isset($this->settings[$currentStep]['templateFile'])) {
             $templateFile = $this->settings[$currentStep]['templateFile'];
-        } elseif (isset($this->settings['templateFile'])) {
+        } elseif (isset($this->settings['templateFile']) && $currentStep === 1) {
             $templateFile = $this->settings['templateFile'];
         }
 
