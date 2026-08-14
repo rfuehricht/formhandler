@@ -150,10 +150,10 @@ class FormController extends ActionController
         $this->globals->setValues($this->gp);
 
         $this->globals->setErrors($errors);
-
         $this->view->assignMultiple([
             'formValuesPrefix' => $this->globals->getFormValuesPrefix(),
             'currentStep' => $currentStep,
+            'totalSteps' => $this->calculateTotalSteps(),
             'submit' => [
                 'previousStep' => 'submit-' . ($currentStep - 1),
                 'nextStep' => 'submit-' . ($currentStep + 1),
@@ -475,6 +475,19 @@ class FormController extends ActionController
             }
         }
         $this->globals->getSession()->set('files', $tempFiles);
+    }
+
+    private function calculateTotalSteps(): int
+    {
+        $maxStep = 1;
+        foreach ($this->settings as $key => $stepSettings) {
+            if (is_numeric($key)
+                && intval($key) > $maxStep
+                && isset($stepSettings['templateFile'])) {
+                $maxStep = intval($key);
+            }
+        }
+        return $maxStep;
     }
 
 }
