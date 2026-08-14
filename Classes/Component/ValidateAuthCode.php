@@ -27,6 +27,8 @@ class ValidateAuthCode extends AbstractComponent
             return $this->gp;
         }
 
+        $this->uriBuilder->setRequest($this->request);
+
         try {
             $authCode = trim($this->gp['authCode']);
             $table = trim($this->settings['table'] ?? $this->gp['table'] ?? '');
