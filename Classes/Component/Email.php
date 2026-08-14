@@ -2,10 +2,10 @@
 
 namespace Rfuehricht\Formhandler\Component;
 
+use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mime\Address;
-use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Mail\FluidEmail;
 use TYPO3\CMS\Core\Mail\MailerInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -58,26 +58,8 @@ class Email extends AbstractComponent
             $email = $this->setAddresses($email, $multipleAddressField);
         }
 
-        $attachments = $this->settings['attachments'] ?? $this->settings['attachment'] ?? [];
-        if (!is_array($attachments)) {
-            $attachments = GeneralUtility::trimExplode(',', $attachments);
-        }
-        foreach ($attachments as $attachment) {
-            if (strlen($attachment) > 0) {
-                $sessionFiles = $this->globals->getSession()->get('files');
-
-                if (isset($sessionFiles[$attachment])) {
-                    foreach ($sessionFiles[$attachment] as $fileInfo) {
-                        $email->attachFromPath($fileInfo['uploaded_path'] . $fileInfo['uploaded_name']);
-                    }
-                } else {
-                    $file = rtrim(Environment::getProjectPath() . '/') . '/' . ltrim($attachment, '/');
-                    if (file_exists($file)) {
-                        $email->attachFromPath($file);
-                    }
-                }
-            }
-        }
+        $email = $this->addAttachments($email);
+        $email = $this->embedFiles($email);
 
         $email->assignMultiple([
             'values' => $this->gp
@@ -151,6 +133,60 @@ class Email extends AbstractComponent
             $addresses[] = $this->getAddress($setting);
         }
         return $addresses;
+    }
+
+    protected function addAttachments(FluidEmail $email): FluidEmail
+    {
+        $attachments = $this->settings['attachments'] ?? $this->settings['attachment'] ?? [];
+        if (!is_array($attachments)) {
+            $attachments = GeneralUtility::trimExplode(',', $attachments);
+        }
+        foreach ($attachments as $attachment) {
+            if (strlen($attachment) > 0) {
+                $sessionFiles = $this->globals->getSession()->get('files');
+
+                if (isset($sessionFiles[$attachment])) {
+                    foreach ($sessionFiles[$attachment] as $fileInfo) {
+                        $email->attachFromPath($fileInfo['uploaded_path'] . $fileInfo['uploaded_name']);
+                    }
+                } else {
+                    $path = $this->processTypoScriptValue($attachment);
+                    $path = GeneralUtility::getFileAbsFileName($path);
+                    if (file_exists($path)) {
+                        $email->attachFromPath($path);
+                    }
+                }
+            }
+        }
+        return $email;
+    }
+
+    protected function embedFiles(FluidEmail $email): FluidEmail
+    {
+        $filesToEmbed = $this->settings['embed'] ?? [];
+
+        // Only single entry
+        if (isset($filesToEmbed['path'])) {
+            $filesToEmbed = [$filesToEmbed];
+        }
+        foreach ($filesToEmbed as $key => $fileToEmbed) {
+            if (isset($fileToEmbed['path']) && isset($fileToEmbed['name'])) {
+                $name = $fileToEmbed['name'];
+                $path = $fileToEmbed['path'];
+            } else {
+                $name = $key;
+                $path = $fileToEmbed['path'] ?? $fileToEmbed;
+            }
+            if (!$name || !$path) {
+                throw new Exception('Unable to embed file. Path or name not set.');
+            }
+            $path = $this->processTypoScriptValue($path);
+            $path = GeneralUtility::getFileAbsFileName($path);
+            if (file_exists($path)) {
+                $email->embedFromPath($path, $name);
+            }
+        }
+        return $email;
     }
 
 

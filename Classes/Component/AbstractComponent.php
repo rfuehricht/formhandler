@@ -6,6 +6,8 @@ use Psr\Http\Message\ResponseInterface;
 use Rfuehricht\Formhandler\Utility\FormUtility;
 use Rfuehricht\Formhandler\Utility\Globals;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
+use TYPO3\CMS\Frontend\ContentObject\Exception\ContentRenderingException;
 
 
 /**
@@ -36,10 +38,8 @@ abstract class AbstractComponent
 
     public function __construct(
         protected readonly FormUtility $formUtility,
-        protected readonly Globals     $globals
-    )
-    {
-
+        protected readonly Globals $globals
+    ) {
     }
 
     /**
@@ -58,5 +58,31 @@ abstract class AbstractComponent
     }
 
     abstract public function process(): array|ResponseInterface;
+
+
+    /**
+     * Renders content object to get settings value if applicable
+     *
+     * @return string
+     */
+    protected function processTypoScriptValue(array|string $setting): string
+    {
+        /** @var ContentObjectRenderer $contentObjectRenderer */
+        $contentObjectRenderer = $this->request->getAttribute('currentContentObject');
+        if (is_string($setting)) {
+            return $setting;
+        } elseif (isset($setting['_typoScriptNodeValue'])) {
+            try {
+                if ($contentObjectRenderer->getContentObject($setting['_typoScriptNodeValue'])) {
+                    return $contentObjectRenderer->cObjGetSingle($setting['_typoScriptNodeValue'], $setting);
+                } else {
+                    return $contentObjectRenderer->stdWrap('', $setting);
+                }
+            } catch (ContentRenderingException $e) {
+                return '';
+            }
+        }
+        return '';
+    }
 
 }

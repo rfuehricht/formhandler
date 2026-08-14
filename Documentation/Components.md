@@ -163,6 +163,7 @@ Options:
 | replyTo      | array        | List of recipients. Each entry consists of `email` and an optional `name` setting.                                                                                                       |
 | returnPath   | address      | Consists of `email` and an optional `name` setting.                                                                                                                                      |
 | attachments  | string,array | List or array of form upload fields or static file names to attach.                                                                                                                      |
+| embed        | array        | List of files to embed into email. Each entry consists of `path` and `name`.                                                                                                             |
 
 
 FLUID variables:
@@ -191,6 +192,20 @@ finishers {
     }
 
     attachments = file
+
+    embed {
+      # Use in email template like this: <img src="cid:logo" />
+      1 {
+        path = EXT:theme/Resources/Public/Images/logo.png
+        name = logo
+      }
+
+      # Alternatively, use the name as Key:
+      logo = EXT:theme/Resources/Public/Images/logo.png
+
+      # Or something like this
+      logo.data = PATH:EXT:theme/Resources/Public/Images/logo.png
+    }
   }
 }
 ```
