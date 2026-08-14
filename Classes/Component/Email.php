@@ -45,20 +45,17 @@ class Email extends AbstractComponent
 
         $email->setTemplate($templateFile);
 
-
         //set e-mail options
         $email->subject($this->settings['subject'] ?? '');
 
-        if (isset($this->settings['sender']['email'])) {
-            $email->sender($this->getAddress($this->settings['sender']));
+        $singleAddressFields = ['sender', 'returnPath'];
+        $multipleAddressFields = ['replyTo', 'to', 'cc', 'bcc'];
+
+        foreach ($singleAddressFields as $singleAddressField) {
+            $email = $this->setSingleAddress($email, $singleAddressField);
         }
-
-        $email->replyTo(...$this->getAddresses($this->settings['replyTo'] ?? []));
-        $email->cc(...$this->getAddresses($this->settings['cc'] ?? []));
-        $email->bcc(...$this->getAddresses($this->settings['bcc'] ?? []));
-
-        if (isset($this->settings['returnPath']['email'])) {
-            $email->returnPath($this->getAddress($this->settings['returnPath']));
+        foreach ($multipleAddressFields as $multipleAddressField) {
+            $email = $this->setAddresses($email, $multipleAddressField);
         }
 
         $attachments = $this->settings['attachments'] ?? $this->settings['attachment'] ?? [];
@@ -86,26 +83,59 @@ class Email extends AbstractComponent
             'values' => $this->gp
         ]);
 
-        $email->to(...$this->getAddresses($this->settings['to'] ?? []));
-
         GeneralUtility::makeInstance(MailerInterface::class)->send($email);
+    }
 
+    /**
+     * Sets a single address field.
+     */
+    protected function setSingleAddress(FluidEmail $email, string $field): FluidEmail
+    {
+        if (isset($this->settings[$field])) {
+            if (is_string($this->settings[$field])) {
+                $email->$field(new Address($this->settings[$field]));
+            } elseif (isset($this->settings[$field]['email'])) {
+                $email->$field($this->getAddress($this->settings[$field]));
+            }
+        }
+        return $email;
     }
 
     /**
      * Reads email setting and replaces with values from GET/POST data if available.
      *
-     * @param array $settings
+     * @param array|string $settings
      * @return Address
      */
-    protected function getAddress(array $settings): Address
+    protected function getAddress(array|string $settings): Address
     {
+        if (is_string($settings)) {
+            $settings = ['email' => $settings];
+        }
         $email = $this->gp[$settings['email']] ?? $settings['email'];
         $name = '';
         if (isset($settings['name'])) {
             $name = $this->gp[$settings['name']] ?? $settings['name'];
         }
         return new Address($email, $name);
+    }
+
+    /**
+     * Sets multiple addresses.
+     */
+    protected function setAddresses(FluidEmail $email, string $field): FluidEmail
+    {
+        if (isset($this->settings[$field])) {
+            // allow single email address or multiple in TypoScript
+            if (is_string($this->settings[$field])) {
+                $email->$field($this->getAddress($this->settings[$field]));
+            } elseif (isset($this->settings[$field]['email'])) {
+                $email->$field($this->getAddress($this->settings[$field]));
+            } else {
+                $email->$field(...$this->getAddresses($this->settings[$field] ?? []));
+            }
+        }
+        return $email;
     }
 
     /**
