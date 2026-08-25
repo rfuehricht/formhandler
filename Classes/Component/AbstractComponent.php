@@ -67,16 +67,16 @@ abstract class AbstractComponent
      */
     protected function processTypoScriptValue(array|string $setting): string
     {
-        /** @var ContentObjectRenderer $contentObjectRenderer */
-        $contentObjectRenderer = $this->request->getAttribute('currentContentObject');
         if (is_string($setting)) {
             return $setting;
         } elseif (isset($setting['_typoScriptNodeValue'])) {
+            /** @var ContentObjectRenderer $contentObjectRenderer */
+            $contentObjectRenderer = $this->request->getAttribute('currentContentObject');
             try {
                 if ($contentObjectRenderer->getContentObject($setting['_typoScriptNodeValue'])) {
                     return $contentObjectRenderer->cObjGetSingle($setting['_typoScriptNodeValue'], $setting);
                 } else {
-                    return $contentObjectRenderer->stdWrap('', $setting);
+                    return $contentObjectRenderer->stdWrapValue('_typoScriptNodeValue', $setting);
                 }
             } catch (ContentRenderingException $e) {
                 return '';
