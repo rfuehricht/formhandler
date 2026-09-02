@@ -5,6 +5,8 @@ namespace Rfuehricht\Formhandler\Component;
 use Psr\Http\Message\ResponseInterface;
 use Rfuehricht\Formhandler\Utility\FormUtility;
 use Rfuehricht\Formhandler\Utility\Globals;
+use TYPO3\CMS\Core\TypoScript\TypoScriptService;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\CMS\Frontend\ContentObject\Exception\ContentRenderingException;
@@ -72,11 +74,14 @@ abstract class AbstractComponent
         } elseif (isset($setting['_typoScriptNodeValue'])) {
             /** @var ContentObjectRenderer $contentObjectRenderer */
             $contentObjectRenderer = $this->request->getAttribute('currentContentObject');
+            $typoScriptService = GeneralUtility::makeInstance(TypoScriptService::class);
+            $value = $setting['_typoScriptNodeValue'];
+            $typoScriptArray = $typoScriptService->convertPlainArrayToTypoScriptArray($setting);
             try {
-                if ($contentObjectRenderer->getContentObject($setting['_typoScriptNodeValue'])) {
-                    return $contentObjectRenderer->cObjGetSingle($setting['_typoScriptNodeValue'], $setting);
+                if ($contentObjectRenderer->getContentObject($value)) {
+                    return $contentObjectRenderer->cObjGetSingle($value, $typoScriptArray);
                 } else {
-                    return $contentObjectRenderer->stdWrapValue('_typoScriptNodeValue', $setting);
+                    return $contentObjectRenderer->stdWrap($value, $typoScriptArray);
                 }
             } catch (ContentRenderingException $e) {
                 return '';
