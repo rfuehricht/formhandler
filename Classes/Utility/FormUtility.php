@@ -402,4 +402,53 @@ class FormUtility implements SingletonInterface
         }
         return '';
     }
+
+
+    /**
+     * Loads formhandler values from session, merges them with current GET/POST values
+     * and returns final array.
+     *
+     * @param string|null $formValuesPrefix
+     * @return array
+     */
+    public function getFormhandlerValues(?string $formValuesPrefix = null): array
+    {
+        /** @var Globals $globals */
+        $globals = GeneralUtility::makeInstance(Globals::class);
+        $values = $GLOBALS['TYPO3_REQUEST']->getQueryParams() ?? [];
+        $values = array_merge($values, $GLOBALS['TYPO3_REQUEST']->getParsedBody() ?? []);
+        $values = $values['tx_formhandler_form'] ?? [];
+
+        if ($formValuesPrefix) {
+            $values = $values[$formValuesPrefix] ?? [];
+        }
+        $globals->setRandomId($values['randomId'] ?? '');
+        $globals->setFormValuesPrefix($formValuesPrefix);
+
+        return array_merge($globals->getSession()->get('values') ?? [], $values);
+    }
+
+    /**
+     * @param array $keys
+     * @param mixed $startValue
+     * @return int|float|string
+     */
+    public function getValueFromRecursiveData(array $keys, mixed $startValue): int|float|string
+    {
+        $value = $startValue;
+        $numberOfLevels = count($keys);
+        for ($i = 0; $i < $numberOfLevels && isset($value); $i++) {
+            $currentKey = $keys[$i];
+            if (is_array($value)) {
+                $value = $value[$currentKey] ?? '';
+            } else {
+                $value = '';
+                break;
+            }
+        }
+        if (!is_scalar($value)) {
+            $value = '';
+        }
+        return $value;
+    }
 }

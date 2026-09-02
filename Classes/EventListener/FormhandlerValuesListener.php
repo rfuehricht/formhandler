@@ -2,8 +2,7 @@
 
 namespace Rfuehricht\Formhandler\EventListener;
 
-use Rfuehricht\Configloader\Utility\ConfigurationUtility;
-use Rfuehricht\Formhandler\Utility\Globals;
+use Rfuehricht\Formhandler\Utility\FormUtility;
 use TYPO3\CMS\Core\Attribute\AsEventListener;
 use TYPO3\CMS\Core\TypoScript\AST\Event\EvaluateModifierFunctionEvent;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -20,7 +19,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final class FormhandlerValuesListener
 {
     public function __construct(
-        protected ConfigurationUtility $configurationUtility
+        protected FormUtility $formUtility
     ) {
     }
 
@@ -39,19 +38,16 @@ final class FormhandlerValuesListener
                 $key = $parts[1];
             }
 
-            /** @var Globals $globals */
-            $globals = GeneralUtility::makeInstance(Globals::class);
-            $values = $GLOBALS['TYPO3_REQUEST']->getParsedBody() ?? [];
-            $values = $values['tx_formhandler_form'] ?? [];
+            $values = $this->formUtility->getFormhandlerValues($formValuesPrefix);
 
-            if ($formValuesPrefix) {
-                $values = $values[$formValuesPrefix] ?? [];
+            if (str_contains($key, '|')) {
+                $keys = GeneralUtility::trimExplode('|', $key, true);
+                $value = $this->formUtility->getValueFromRecursiveData($keys, $values);
+            } else {
+                $value = $values[$key] ?? '';
             }
-            $globals->setRandomId($values['randomId'] ?? '');
-            $globals->setFormValuesPrefix($formValuesPrefix);
 
-            $values = array_merge($globals->getSession()->get('values') ?? [], $values);
-            $value = $values[$key] ?? '';
+
             $event->setValue($value);
         }
     }
