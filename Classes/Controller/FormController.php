@@ -86,8 +86,21 @@ class FormController extends ActionController
                 break;
             default:
                 $wantedStep = intval($wantedStepOrAction);
-                if ($wantedStep === $currentStep + 1) {
+                if ($wantedStep === $currentStep) {
+                    // Submit reload action for uploading files
+
                     //Run validations
+                    $errors = $this->runValidations(fileChecksOnly: true);
+
+                    if (empty($errors)) {
+                        $this->processFiles();
+                    }
+                    $this->settings = $originalSettings;
+                } else {
+                    if ($wantedStep < 1) {
+                        $wantedStep = 1;
+                    }
+                    // Run validations
                     $errors = $this->runValidations();
 
                     if (empty($errors)) {
@@ -95,23 +108,9 @@ class FormController extends ActionController
                         $this->storeGPinSession();
 
                         $this->processFiles();
-                    }
-                } elseif ($wantedStep === $currentStep || $wantedStep === $currentStep - 1) {
-                    //Submit reload action for uploading files
-                    if ($wantedStep === $currentStep) {
-                        //Run validations
-                        $errors = $this->runValidations(fileChecksOnly: true);
 
-                        if (empty($errors)) {
-                            $this->processFiles();
-                        }
+                        $this->settings = $originalSettings;
                     }
-
-                    $currentStep = $wantedStep;
-                    if ($currentStep < 1) {
-                        $currentStep = 1;
-                    }
-                    $this->settings = $originalSettings;
                 }
                 break;
         }
@@ -345,24 +344,6 @@ class FormController extends ActionController
     }
 
     /**
-     * Stores the current GET/POST parameters in SESSION
-     *
-     * @return void
-     */
-    protected function storeGPinSession(): void
-    {
-        $data = $this->globals->getSession()->get('values');
-
-        $internalKeys = ['randomId', 'prev', 'next', 'submit'];
-        foreach ($this->gp as $key => $value) {
-            if (!in_array($key, $internalKeys)) {
-                $data[$key] = $this->gp[$key];
-            }
-        }
-        $this->globals->getSession()->set('values', $data);
-    }
-
-    /**
      * Processes uploaded files, moves them to a temporary upload folder, renames them if they already exist and
      * stores the information in user session
      *
@@ -475,6 +456,24 @@ class FormController extends ActionController
             }
         }
         $this->globals->getSession()->set('files', $tempFiles);
+    }
+
+    /**
+     * Stores the current GET/POST parameters in SESSION
+     *
+     * @return void
+     */
+    protected function storeGPinSession(): void
+    {
+        $data = $this->globals->getSession()->get('values');
+
+        $internalKeys = ['randomId', 'prev', 'next', 'submit'];
+        foreach ($this->gp as $key => $value) {
+            if (!in_array($key, $internalKeys)) {
+                $data[$key] = $this->gp[$key];
+            }
+        }
+        $this->globals->getSession()->set('values', $data);
     }
 
     private function calculateTotalSteps(): int
