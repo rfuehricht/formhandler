@@ -56,6 +56,7 @@ The available options in `settings` are:
 | skipView         | bool (0,1)    | If set to `1`, Formhandler doesn't show an HTML template, it immediately runs pre-processors, interceptors and finishers.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | useForm          | string        | Specify key of a predefined form to use. This renders a certain form without taking care of plugin settings in flex forms.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | files            | array         | Settings for file uploads.<br><br>`uploadedFilesWithSameName` - Configure what to do if a file exists in the upload folder.<br><br>`ignore` - Default. Use existing file and ignore uploaded file.<br>`replace` - Replace existing file with new file.<br>`append` - Append numeric suffix for the new file. Both files are stored.<br><br>`uploadFolder`, `uploadFolder.[fieldname]`- Specify upload folder to use.<br>`search` - comma separated list of characters to replace in file names.<br>`replace` - Comma separated list of replacements for `search`.<br>`usePregReplace` - If set to `1`, `search` is treated as regular expression. |
+| variables        | array         | Set custom variables to use in FLUID templates, e.g. {variables.myVariable}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 
 ## Multi step forms
@@ -118,3 +119,24 @@ Use a different template file and validations if a certain value was set.
 ```
 
 `formhandlerValues('contact')` The string `contact` here is the `formValuesPrefix` of the form, **NOT** the form key.
+
+## Access form values in TypoScript
+
+The current values of a form can be accessed via TypoScript using the `formhandlerValues` function.
+
+Example:
+```text
+plugin.tx_formhandler.forms.contact.settings {
+    variables {
+      myVariable = TEXT
+      myVariable.value := formhandlerValues(contact:name)
+
+      myNestedVariable = TEXT
+      myNestedVariable.value := formhandlerValues(contact:data|name)
+    }
+  }
+```
+
+You can access all values of the form (from each step) this way, not only the currently submitted GET/POST values.
+
+The syntax is `[formValuesPrefix]:[parameterName]`. `formValuesPrefix` can be omitted if no prefix is used.
