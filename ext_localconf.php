@@ -12,3 +12,4 @@ ExtensionUtility::class::configurePlugin(
     [FormController::class => 'form'],
     ExtensionUtility::PLUGIN_TYPE_CONTENT_ELEMENT
 );
+

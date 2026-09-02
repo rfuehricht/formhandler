@@ -150,7 +150,7 @@ class Email extends AbstractComponent
                         $email->attachFromPath($fileInfo['uploaded_path'] . $fileInfo['uploaded_name']);
                     }
                 } else {
-                    $path = $this->processTypoScriptValue($attachment);
+                    $path = $this->formUtility->processTypoScriptValue($attachment);
                     $path = GeneralUtility::getFileAbsFileName($path);
                     if (file_exists($path)) {
                         $email->attachFromPath($path);
@@ -180,7 +180,7 @@ class Email extends AbstractComponent
             if (!$name || !$path) {
                 throw new Exception('Unable to embed file. Path or name not set.');
             }
-            $path = $this->processTypoScriptValue($path);
+            $path = $this->formUtility->processTypoScriptValue($path);
             $path = GeneralUtility::getFileAbsFileName($path);
             if (file_exists($path)) {
                 $email->embedFromPath($path, $name);

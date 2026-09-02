@@ -34,6 +34,8 @@ class FormController extends ActionController
     {
         $this->checkPredefinedFormToUse();
 
+        $this->formUtility->setRequest($this->request);
+
         $originalSettings = $this->settings;
         $this->gp = $this->request->getParsedBody()['tx_formhandler_form'] ?? [];
         if (isset($this->settings['formValuesPrefix'])) {
@@ -149,6 +151,14 @@ class FormController extends ActionController
         $this->globals->setValues($this->gp);
 
         $this->globals->setErrors($errors);
+
+
+        if (isset($this->settings['variables'])) {
+            $variables = array_map(function ($value) {
+                return $this->formUtility->processTypoScriptValue($value);
+            }, $this->settings['variables']);
+            $this->view->assign('variables', $variables);
+        }
         $this->view->assignMultiple([
             'formValuesPrefix' => $this->globals->getFormValuesPrefix(),
             'currentStep' => $currentStep,

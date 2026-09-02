@@ -5,12 +5,16 @@ namespace Rfuehricht\Formhandler\Utility;
 
 use DateTime;
 use Exception;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Crypto\HashService;
 use TYPO3\CMS\Core\Crypto\Random;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
+use TYPO3\CMS\Frontend\ContentObject\Exception\ContentRenderingException;
 
 /**
  * A class providing helper functions for Formhandler
@@ -20,11 +24,11 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 class FormUtility implements SingletonInterface
 {
 
+    protected ServerRequestInterface $request;
+
     public function __construct(
         private readonly Globals $globals
-    )
-    {
-
+    ) {
     }
 
     public function getFilesArray(): array
@@ -96,7 +100,6 @@ class FormUtility implements SingletonInterface
     {
         $timestamp = 0;
         if (strlen(trim($date)) > 0) {
-
             $dateObj = DateTime::createFromFormat($format, $date);
             if ($dateObj) {
                 $timestamp = $dateObj->getTimestamp();
@@ -122,7 +125,6 @@ class FormUtility implements SingletonInterface
      **/
     public function doFileNameReplace(string $fileName): string
     {
-
         $settings = $this->globals->getSettings();
 
         //Default: Replace spaces with underscores
@@ -170,7 +172,6 @@ class FormUtility implements SingletonInterface
      */
     public function getUploadFolder(string $fieldName = ''): string
     {
-
         //set default upload folder
         $uploadFolder = '/uploads/formhandler/tmp/';
 
@@ -249,7 +250,11 @@ class FormUtility implements SingletonInterface
      */
     public function getExceptionMessage(string $key): string
     {
-        return trim(LocalizationUtility::translate('LLL:EXT:formhandler/Resources/Private/Language/locallang_exceptions.xlf:' . $key));
+        return trim(
+            LocalizationUtility::translate(
+                'LLL:EXT:formhandler/Resources/Private/Language/locallang_exceptions.xlf:' . $key
+            )
+        );
     }
 
     public function translate(string $key, array $arguments = []): string
@@ -363,5 +368,38 @@ class FormUtility implements SingletonInterface
         }
 
         $this->globals->getSession()->set('files', $sessionFiles);
+    }
+
+    public function setRequest(ServerRequestInterface $request): void
+    {
+        $this->request = $request;
+    }
+
+    /**
+     * Renders content object to get settings value if applicable
+     *
+     * @return string
+     */
+    public function processTypoScriptValue(array|string $setting): string
+    {
+        if (is_string($setting)) {
+            return $setting;
+        } elseif (isset($setting['_typoScriptNodeValue'])) {
+            /** @var ContentObjectRenderer $contentObjectRenderer */
+            $contentObjectRenderer = $this->request->getAttribute('currentContentObject');
+            $typoScriptService = GeneralUtility::makeInstance(TypoScriptService::class);
+            $value = $setting['_typoScriptNodeValue'];
+            $typoScriptArray = $typoScriptService->convertPlainArrayToTypoScriptArray($setting);
+            try {
+                if ($contentObjectRenderer->getContentObject($value)) {
+                    return $contentObjectRenderer->cObjGetSingle($value, $typoScriptArray);
+                } else {
+                    return $contentObjectRenderer->stdWrap($value, $typoScriptArray);
+                }
+            } catch (ContentRenderingException $e) {
+                return '';
+            }
+        }
+        return '';
     }
 }

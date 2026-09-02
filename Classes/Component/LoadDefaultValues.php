@@ -13,7 +13,7 @@ class LoadDefaultValues extends AbstractComponent
     public function process(): array|ResponseInterface
     {
         foreach ($this->settings as $fieldName => $defaultValue) {
-            $this->gp[$fieldName] = $this->processTypoScriptValue($defaultValue);
+            $this->gp[$fieldName] = $this->formUtility->processTypoScriptValue($defaultValue);
         }
         return $this->gp;
     }

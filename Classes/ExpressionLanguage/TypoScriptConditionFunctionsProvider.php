@@ -42,6 +42,8 @@ class TypoScriptConditionFunctionsProvider implements ExpressionFunctionProvider
                 $globals->setRandomId($values['randomId'] ?? '');
                 $globals->setFormValuesPrefix($formValuesPrefix);
 
+                $values = array_merge($globals->getSession()->get('values') ?? [], $values);
+
                 return $values;
             }
         );

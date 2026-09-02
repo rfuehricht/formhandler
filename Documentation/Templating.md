@@ -133,3 +133,25 @@ This example code renders a file upload field allowing upload of multiple files.
 Next to the field is a submit button which triggers a reload of the form only doing validation and upload of file upload fields and showing current step again.
 
 The FLUID variable `files` holds information about the uploaded files. It can be looped to show the file name and size and render a removal button using a [ViewHelper](./ViewHelpers.md).
+
+### Custom variables
+
+You can define custom variables for FLUID templates via TypoScript.
+This can be done per step.
+
+Example:
+
+```
+settings {
+  variables {
+    myVariable = TEXT
+    myVariable.value = Hello World
+  }
+}
+```
+
+Usage in template:
+
+```html
+<f:format.raw>{variables.myVariable}</f:format.raw>
+```
