@@ -413,8 +413,6 @@ class FormUtility implements SingletonInterface
      */
     public function getFormhandlerValues(?string $formValuesPrefix = null): array
     {
-        /** @var Globals $globals */
-        $globals = GeneralUtility::makeInstance(Globals::class);
         $values = $GLOBALS['TYPO3_REQUEST']->getQueryParams() ?? [];
         $values = array_merge($values, $GLOBALS['TYPO3_REQUEST']->getParsedBody() ?? []);
         $values = $values['tx_formhandler_form'] ?? [];
@@ -422,10 +420,10 @@ class FormUtility implements SingletonInterface
         if ($formValuesPrefix) {
             $values = $values[$formValuesPrefix] ?? [];
         }
-        $globals->setRandomId($values['randomId'] ?? '');
-        $globals->setFormValuesPrefix($formValuesPrefix);
+        $this->globals->setRandomId($values['randomId'] ?? '');
+        $this->globals->setFormValuesPrefix($formValuesPrefix);
 
-        return array_merge($globals->getSession()->get('values') ?? [], $values);
+        return array_merge($this->globals->getSession()->get('values') ?? [], $values);
     }
 
     /**
