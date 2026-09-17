@@ -2,6 +2,7 @@
 
 namespace Rfuehricht\Formhandler\Utility;
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
@@ -30,7 +31,31 @@ class TcaUtility
      */
     public function getPredefinedForms(array $config): array
     {
+        $request = $GLOBALS['TYPO3_REQUEST'];
+        $params = $request->getQueryParams()['edit']['tt_content'] ?? [];
+        $paramsKeys = array_keys($params);
+        $firstKey = reset($paramsKeys) ?? '';
+        $firstValue = reset($params) ?? '';
+        if ($firstValue === 'new') {
+            $pid = $firstKey;
+        } else {
+            $contentId = $firstKey;
+            if (!$contentId) {
+                return $config;
+            }
+            $contentRecord = BackendUtility::getRecord('tt_content', $contentId) ?? [];
+            $pid = $contentRecord['pid'] ?? null;
+            if (!$pid) {
+                return $config;
+            }
+        }
+
+        $request = $request
+            ->withQueryParams(['id' => $pid]);
+
+
         $items = $config['items'];
+        $this->configurationManager->setRequest($request);
         $setup = $this->configurationManager->getConfiguration(
             ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT
         );
