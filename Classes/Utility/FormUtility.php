@@ -413,6 +413,9 @@ class FormUtility implements SingletonInterface
      */
     public function getFormhandlerValues(?string $formValuesPrefix = null): array
     {
+        if (!$GLOBALS['TYPO3_REQUEST']) {
+            return [];
+        }
         $values = $GLOBALS['TYPO3_REQUEST']->getQueryParams() ?? [];
         $values = array_merge($values, $GLOBALS['TYPO3_REQUEST']->getParsedBody() ?? []);
         $values = $values['tx_formhandler_form'] ?? [];
