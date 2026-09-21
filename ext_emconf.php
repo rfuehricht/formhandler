@@ -3,8 +3,8 @@
 $EM_CONF[$_EXTKEY] = [
     'title' => 'Formhandler',
     'description' => 'The swiss army knife for all kinds of mail forms.',
-    'category' => 'frontend',
-    'version' => '14.2.4',
+    'category' => 'plugin',
+    'version' => '14.2.5',
     'state' => 'stable',
     'author' => 'Reinhard Führicht',
     'author_email' => 'r.fuehricht@gmail.com',
@@ -14,8 +14,5 @@ $EM_CONF[$_EXTKEY] = [
         ],
         'conflicts' => [
         ],
-    ],
-    'uploadfolder' => 1,
-    'createDirs' => '',
-    'clearCacheOnLoad' => 1
+    ]
 ];
