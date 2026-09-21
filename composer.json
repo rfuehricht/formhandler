@@ -2,7 +2,7 @@
   "name": "rfuehricht/formhandler",
   "type": "typo3-cms-extension",
   "description": "The swiss army knife for all kinds of mail forms.",
-  "version": "14.2.2",
+  "version": "14.2.3",
   "license": [
     "GPL-3.0-or-later"
   ],
@@ -29,7 +29,10 @@
   },
   "extra": {
     "typo3/cms": {
-      "extension-key": "formhandler"
+      "extension-key": "formhandler",
+		"Package": {
+			"providesPackages": {}
+		}
     }
   }
 }
